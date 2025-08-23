@@ -9,201 +9,305 @@ interface VisualSearchProps {
 }
 
 type Shape = {
-  type: 'circle' | 'square' | 'triangle'
-  color: string
-  size: number
-  x: number
-  y: number
+  name: string
 }
 
+type Cell = {
+  shape: Shape
+  filled: boolean
+  rotation: number
+} | null
+
+type Grid = Cell[]
+
 export default function VisualSearch({ onComplete }: VisualSearchProps) {
-  const [leftShapes, setLeftShapes] = useState<Shape[]>([])
-  const [rightShapes, setRightShapes] = useState<Shape[]>([])
-  const [hasDifference, setHasDifference] = useState(false)
-  const [found, setFound] = useState(false)
-  const [round, setRound] = useState(1)
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [totalTime, setTotalTime] = useState(0)
-  const [userAnswer, setUserAnswer] = useState<'same' | 'different' | null>(null)
-  const totalRounds = 5
+  const [grid1, setGrid1] = useState<Grid>([])
+  const [grid2, setGrid2] = useState<Grid>([])
+  const [gameStarted, setGameStarted] = useState(false)
+  const [currentRound, setCurrentRound] = useState(1)
+  const [level, setLevel] = useState(3)
+  const [score, setScore] = useState(0)
+  const maxLevel = 20 // Increased max level for more tokens
+  const totalRounds = 12 // 12 rounds total
   
-  const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6']
-  const shapeTypes: ('circle' | 'square' | 'triangle')[] = ['circle', 'square', 'triangle']
+  const shapes = [
+    { name: "circle" },
+    { name: "square" },
+    { name: "triangle" },
+    { name: "diamond" },
+    { name: "cross" },
+  ]
   
-  const generateShapes = useCallback(() => {
-    const numShapes = 6 + Math.floor(Math.random() * 3) // 6-8 shapes
-    const shapes: Shape[] = []
-    
-    for (let i = 0; i < numShapes; i++) {
-      shapes.push({
-        type: shapeTypes[Math.floor(Math.random() * shapeTypes.length)],
-        color: colors[Math.floor(Math.random() * colors.length)],
-        size: 30 + Math.random() * 30, // 30-60px
-        x: Math.random() * 80 + 10, // 10-90%
-        y: Math.random() * 80 + 10, // 10-90%
-      })
-    }
-    
-    return shapes
-  }, [])
-  
-  const generateRound = useCallback(() => {
-    const left = generateShapes()
-    const shouldHaveDifference = Math.random() < 0.5
-    let right: Shape[]
-    
-    if (shouldHaveDifference) {
-      // Create one difference
-      right = [...left]
-      const changeIndex = Math.floor(Math.random() * right.length)
-      const changeType = Math.random()
-      
-      if (changeType < 0.33) {
-        // Change color
-        right[changeIndex] = {
-          ...right[changeIndex],
-          color: colors.find(c => c !== right[changeIndex].color) || colors[0]
-        }
-      } else if (changeType < 0.66) {
-        // Change shape
-        right[changeIndex] = {
-          ...right[changeIndex],
-          type: shapeTypes.find(s => s !== right[changeIndex].type) || shapeTypes[0]
-        }
-      } else {
-        // Remove shape
-        right.splice(changeIndex, 1)
-      }
-    } else {
-      // Exact same
-      right = [...left]
-    }
-    
-    setLeftShapes(left)
-    setRightShapes(right)
-    setHasDifference(shouldHaveDifference)
-    setStartTime(Date.now())
-    setUserAnswer(null)
-    setFound(false)
-  }, [generateShapes, colors, shapeTypes])
-  
-  useEffect(() => {
-    generateRound()
-  }, [generateRound, round])
-  
-  const handleAnswer = (answer: 'same' | 'different') => {
-    if (found || !startTime) return
-    
-    const endTime = Date.now()
-    const timeTaken = endTime - startTime
-    const isCorrect = (answer === 'different' && hasDifference) || (answer === 'same' && !hasDifference)
-    
-    setUserAnswer(answer)
-    setFound(true)
-    
-    if (isCorrect) {
-      setTotalTime(totalTime + timeTaken)
-    }
-    
-    setTimeout(() => {
-      if (round < totalRounds) {
-        setRound(round + 1)
-      } else {
-        setTimeout(onComplete, 2000)
-      }
-    }, 1500)
+  const playSuccessSound = () => {
+    const audio = new Audio('/sounds/ding.mp3')
+    audio.volume = 0.5
+    audio.play().catch(console.error)
+  }
+
+  const playErrorSound = () => {
+    const audio = new Audio('/sounds/error.mp3')
+    audio.volume = 0.5
+    audio.play().catch(console.error)
   }
   
-  const renderShape = (shape: Shape) => {
-    const style = {
-      position: 'absolute' as const,
-      left: `${shape.x}%`,
-      top: `${shape.y}%`,
-      width: `${shape.size}px`,
-      height: `${shape.size}px`,
-      transform: 'translate(-50%, -50%)',
+  const generateGrid = useCallback((): Grid => {
+    const newGrid: Grid = Array(25).fill(null) // 5x5 grid = 25 cells
+    const positions = [...Array(25).keys()]
+    
+    // Place shapes based on current level
+    for (let i = 0; i < level; i++) {
+      const randomIndex = Math.floor(Math.random() * positions.length)
+      const position = positions.splice(randomIndex, 1)[0]
+      newGrid[position] = {
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
+        filled: Math.random() > 0.5,
+        rotation: 0
+      }
     }
     
-    switch (shape.type) {
+    return newGrid
+  }, [level])
+  
+  const newRound = useCallback(() => {
+    const newGrid1 = generateGrid()
+    let newGrid2 = [...newGrid1]
+    
+    // Decide if the grids should match or not, randomly
+    if (Math.random() >= 0.5) {
+      // Choose a random non-null cell to modify
+      const filledPositions = newGrid1.reduce<number[]>(
+        (acc, cell, index) => (cell ? [...acc, index] : acc),
+        []
+      )
+      
+      if (filledPositions.length > 0) {
+        const randomIndex = filledPositions[Math.floor(Math.random() * filledPositions.length)]
+        if (newGrid2[randomIndex]) {
+          newGrid2[randomIndex] = {
+            ...newGrid2[randomIndex]!,
+            filled: !newGrid2[randomIndex]!.filled,
+            rotation: Math.floor(Math.random() * 4) * 90 // Random rotation: 0, 90, 180, or 270 degrees
+          }
+        }
+      }
+    }
+    
+    setGrid1(newGrid1)
+    setGrid2(newGrid2)
+  }, [generateGrid])
+  
+  const checkMatch = (isMatch: boolean) => {
+    if (!gameStarted) return
+    
+    // Check if grids actually match (using JSON comparison like the Svelte version)
+    const actualMatch = JSON.stringify(grid1) !== JSON.stringify(grid2)
+    
+    if ((isMatch && !actualMatch) || (!isMatch && actualMatch)) {
+      // Was correct
+      playSuccessSound()
+      setScore(score + 1)
+      
+      if (currentRound < totalRounds) {
+        setCurrentRound(currentRound + 1)
+        setLevel(Math.min(level + 1, maxLevel)) // Increase difficulty each round
+      } else {
+        // All rounds completed!
+        setGameStarted(false)
+        setTimeout(onComplete, 500)
+        return
+      }
+    } else {
+      // Was wrong
+      playErrorSound()
+      setScore(Math.max(0, score - 1))
+    }
+    
+    // Always generate new round after a short delay
+    setTimeout(() => {
+      newRound()
+    }, 100)
+  }
+  
+  const startGame = () => {
+    setGameStarted(true)
+    setCurrentRound(1)
+    setLevel(3)
+    setScore(0)
+    newRound()
+  }
+  
+  useEffect(() => {
+    startGame()
+  }, [])
+  
+  const renderShape = (cell: Cell) => {
+    if (!cell) return null
+    
+    // Smaller tokens - scale down as level increases for more challenge
+    const size = Math.max(24, 36 - Math.floor(level / 3)) // Starts at 36px, goes down to 24px
+    const color = "#3B82F6"
+    const fill = cell.filled ? color : "transparent"
+    const style = { transform: `rotate(${cell.rotation}deg)` }
+    
+    switch (cell.shape.name) {
       case 'circle':
-        return <div style={{ ...style, backgroundColor: shape.color, borderRadius: '50%' }} />
+        return (
+          <div 
+            className="rounded-full border-2"
+            style={{ 
+              width: `${size}px`, 
+              height: `${size}px`, 
+              borderColor: color,
+              backgroundColor: fill,
+              ...style
+            }}
+          />
+        )
       case 'square':
-        return <div style={{ ...style, backgroundColor: shape.color }} />
+        return (
+          <div 
+            className="border-2"
+            style={{ 
+              width: `${size}px`, 
+              height: `${size}px`, 
+              borderColor: color,
+              backgroundColor: fill,
+              ...style
+            }}
+          />
+        )
       case 'triangle':
         return (
-          <div style={{
-            ...style,
-            width: 0,
-            height: 0,
-            borderLeft: `${shape.size/2}px solid transparent`,
-            borderRight: `${shape.size/2}px solid transparent`,
-            borderBottom: `${shape.size}px solid ${shape.color}`,
-          }} />
+          <div style={style}>
+            <div 
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: `${size/2}px solid transparent`,
+                borderRight: `${size/2}px solid transparent`,
+                borderBottom: `${size}px solid ${cell.filled ? color : 'transparent'}`,
+                ...(cell.filled ? {} : {
+                  borderBottomColor: 'transparent',
+                  borderBottomWidth: `${size-4}px`,
+                  borderLeftWidth: `${size/2-2}px`,
+                  borderRightWidth: `${size/2-2}px`,
+                  borderBottom: `${size-4}px solid transparent`,
+                  outline: `2px solid ${color}`,
+                  outlineOffset: '-2px'
+                })
+              }}
+            />
+          </div>
         )
+      case 'diamond':
+        return (
+          <div 
+            className="border-2"
+            style={{ 
+              width: `${size*0.7}px`, 
+              height: `${size*0.7}px`, 
+              borderColor: color,
+              backgroundColor: fill,
+              transform: `${style.transform} rotate(45deg)`,
+            }}
+          />
+        )
+      case 'cross':
+        return (
+          <div style={style}>
+            <div className="relative" style={{ width: `${size}px`, height: `${size}px` }}>
+              <div 
+                className="absolute"
+                style={{
+                  width: `${size}px`,
+                  height: `${size/4}px`,
+                  top: `${size*3/8}px`,
+                  backgroundColor: cell.filled ? color : 'transparent',
+                  border: cell.filled ? 'none' : `2px solid ${color}`
+                }}
+              />
+              <div 
+                className="absolute"
+                style={{
+                  width: `${size/4}px`,
+                  height: `${size}px`,
+                  left: `${size*3/8}px`,
+                  backgroundColor: cell.filled ? color : 'transparent',
+                  border: cell.filled ? 'none' : `2px solid ${color}`
+                }}
+              />
+            </div>
+          </div>
+        )
+      default:
+        return null
     }
+  }
+  
+  if (!gameStarted && currentRound > totalRounds) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
+        <Card className="animate-slide-up">
+          <CardContent className="text-center py-16">
+            <div className="space-y-6">
+              <div className="text-6xl">✨</div>
+              <h3 className="text-3xl font-light">All Rounds Complete!</h3>
+              <p className="text-lg text-gray-600">Final Score: {score}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
   
   return (
     <div className="max-w-6xl mx-auto px-6 sm:px-8 py-8">
       <Card className="animate-slide-up">
         <CardHeader className="text-center">
-          <CardTitle>Spot the Difference</CardTitle>
+          <CardTitle>Feature Match</CardTitle>
           <CardDescription>
-            Round {round} of {totalRounds}
-            {totalTime > 0 && round > 1 && ` • Average: ${Math.round(totalTime / (round - 1))}ms`}
+            Round {currentRound} of {totalRounds} • Level {level} • Score {score}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="relative bg-gray-50 rounded-lg" style={{ height: '400px' }}>
-              {leftShapes.map((shape, index) => (
-                <div key={index}>{renderShape(shape)}</div>
+          <div className="flex justify-center gap-8">
+            {/* Grid 1 */}
+            <div className="grid grid-cols-5 gap-1 p-3 bg-gray-100 rounded-lg">
+              {grid1.map((cell, index) => (
+                <div key={`grid1-${index}`} className="w-12 h-12 flex items-center justify-center">
+                  {renderShape(cell)}
+                </div>
               ))}
             </div>
-            <div className="relative bg-gray-50 rounded-lg" style={{ height: '400px' }}>
-              {rightShapes.map((shape, index) => (
-                <div key={index}>{renderShape(shape)}</div>
+            
+            {/* Grid 2 */}
+            <div className="grid grid-cols-5 gap-1 p-3 bg-gray-100 rounded-lg">
+              {grid2.map((cell, index) => (
+                <div key={`grid2-${index}`} className="w-12 h-12 flex items-center justify-center">
+                  {renderShape(cell)}
+                </div>
               ))}
             </div>
           </div>
           
           <div className="flex justify-center gap-4">
             <Button
-              onClick={() => handleAnswer('same')}
-              disabled={found}
-              variant={userAnswer === 'same' ? (!hasDifference ? 'default' : 'destructive') : 'secondary'}
+              onClick={() => checkMatch(true)}
+              disabled={!gameStarted}
               size="lg"
+              className="min-w-[120px] bg-green-500 hover:bg-green-600"
             >
-              They're the same
+              Match
             </Button>
             <Button
-              onClick={() => handleAnswer('different')}
-              disabled={found}
-              variant={userAnswer === 'different' ? (hasDifference ? 'default' : 'destructive') : 'secondary'}
+              onClick={() => checkMatch(false)}
+              disabled={!gameStarted}
               size="lg"
+              className="min-w-[120px] bg-red-500 hover:bg-red-600"
             >
-              There's a difference
+              Mismatch
             </Button>
           </div>
-          
-          {found && (
-            <div className="text-center animate-fade-in">
-              <p className="text-lg">
-                {userAnswer === (hasDifference ? 'different' : 'same') 
-                  ? '✓ Correct!' 
-                  : '✗ Incorrect'}
-              </p>
-            </div>
-          )}
-          
-          {found && round === totalRounds && (
-            <div className="text-center animate-fade-in">
-              <p className="text-lg">Average time: {Math.round(totalTime / totalRounds)}ms</p>
-              <p className="text-gray-600">
-                {totalTime / totalRounds < 2000 ? 'Excellent visual scanning!' : 'Good focus!'}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

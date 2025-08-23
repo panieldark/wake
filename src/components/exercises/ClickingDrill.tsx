@@ -39,25 +39,12 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
   }, [isActive, lastClickTime])
   
   const playSuccessSound = () => {
-    // Create a simple success beep
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
-    
-    oscillator.connect(gainNode)
-    gainNode.connect(audioContext.destination)
-    
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
-    oscillator.frequency.exponentialRampToValueAtTime(1000, audioContext.currentTime + 0.1)
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
-    
-    oscillator.start(audioContext.currentTime)
-    oscillator.stop(audioContext.currentTime + 0.1)
+    const audio = new Audio('/sounds/ding.mp3')
+    audio.volume = 0.5
+    audio.play().catch(console.error)
   }
 
-  const handleTargetClick = (targetId: number) => {
+  const handleTargetClick = () => {
     playSuccessSound()
     
     const clickTime = Date.now()
@@ -128,7 +115,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
       {targets.map((target) => (
         <button
           key={target.id}
-          onClick={() => handleTargetClick(target.id)}
+          onClick={handleTargetClick}
           className="absolute w-8 h-8 bg-black rounded-full hover:scale-110 transition-transform"
           style={{
             left: `${target.x - 16}px`,

@@ -121,7 +121,7 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
             type="number"
             value={userAnswer}
             onChange={(e) => setUserAnswer(e.target.value)}
-            className="w-32 px-4 py-3 text-2xl text-center font-mono border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-32 px-4 py-3 text-2xl text-center font-mono border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             autoFocus
           />
         </div>

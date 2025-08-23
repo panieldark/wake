@@ -47,7 +47,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
       
       const timer = setTimeout(() => {
         setCurrentIndex(currentIndex + 1)
-      }, 3500) // Slowed down from 2500ms to 3500ms
+      }, 4000) // Slowed down to 4000ms (4 seconds)
       return () => clearTimeout(timer)
     } else if (isActive && currentIndex >= sequence.length) {
       calculateScore()
@@ -55,12 +55,64 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   }, [isActive, currentIndex, sequence.length])
   
   const speakLetter = (letter: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(letter)
-      utterance.rate = 0.8
-      utterance.volume = 0.7
+    console.log('Attempting to speak letter:', letter)
+    
+    if (!('speechSynthesis' in window)) {
+      console.error('Speech synthesis not supported')
+      return
+    }
+
+    // Cancel any ongoing speech
+    speechSynthesis.cancel()
+    
+    const speak = () => {
+      const utterance = new SpeechSynthesisUtterance(letter.toLowerCase())
+      utterance.rate = 0.7
+      utterance.volume = 1.0
+      utterance.pitch = 0.8
+      
+      utterance.onstart = () => console.log('Speech started for:', letter)
+      utterance.onend = () => console.log('Speech ended for:', letter)
+      utterance.onerror = (event) => console.error('Speech error:', event)
+      
+      // Get available voices
+      const voices = speechSynthesis.getVoices()
+      console.log('Total voices available:', voices.length)
+      
+      if (voices.length > 0) {
+        // Try to find a male voice
+        const maleVoice = voices.find(voice => 
+          voice.name.toLowerCase().includes('male') || 
+          voice.name.toLowerCase().includes('david') ||
+          voice.name.toLowerCase().includes('alex') ||
+          voice.name.toLowerCase().includes('daniel') ||
+          voice.name.toLowerCase().includes('aaron') ||
+          voice.name.includes('Google US English')
+        ) || voices.find(voice => voice.lang.startsWith('en-US'))
+        
+        if (maleVoice) {
+          utterance.voice = maleVoice
+          console.log('Using voice:', maleVoice.name, maleVoice.lang)
+        } else {
+          console.log('Using default voice')
+        }
+      }
+      
+      console.log('Speaking with voice:', utterance.voice?.name || 'default')
       speechSynthesis.speak(utterance)
     }
+    
+    // Small delay to ensure previous speech is cancelled
+    setTimeout(() => {
+      if (speechSynthesis.getVoices().length === 0) {
+        console.log('Waiting for voices to load...')
+        speechSynthesis.addEventListener('voiceschanged', speak, { once: true })
+        // Fallback timeout in case voiceschanged never fires
+        setTimeout(speak, 1000)
+      } else {
+        speak()
+      }
+    }, 100)
   }
   
   const startExercise = () => {
@@ -118,7 +170,14 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
               <p>Press <kbd>L</kbd> if the letter matches {n} steps back.</p>
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center pt-6">
+          <CardContent className="flex flex-col items-center gap-4 pt-6">
+            <Button 
+              onClick={() => speakLetter('A')} 
+              variant="secondary" 
+              size="sm"
+            >
+              Test Audio (A)
+            </Button>
             <Button onClick={startExercise} size="lg">
               Start Exercise
             </Button>
