@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
 interface VisualSearchProps {
   onComplete: () => void
@@ -27,6 +28,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
   const [currentRound, setCurrentRound] = useState(1)
   const [level, setLevel] = useState(3)
   const [score, setScore] = useState(0)
+  const [showDialog, setShowDialog] = useState(true)
   const maxLevel = 20 // Increased max level for more tokens
   const totalRounds = 12 // 12 rounds total
   
@@ -244,8 +246,47 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
     }
   }
   
-  if (!gameStarted && currentRound > totalRounds) {
-    return (
+  const handleStartFromDialog = () => {
+    setShowDialog(false)
+  }
+
+  return (
+    <>
+      <ExerciseInstructionDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title="Visual Feature Matching"
+        description="Find matching features between two grids of shapes while filtering out distractions."
+        instructions={
+          <>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🔍 How to Play</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Two grids will appear with various shapes</li>
+                  <li>Find if ANY features match between the grids</li>
+                  <li>Features include: shape type, fill, and rotation</li>
+                  <li>Click "Match" or "No Match" based on what you find</li>
+                  <li>Difficulty increases as you progress</li>
+                </ul>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🎯 Strategy Tips</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Scan systematically - don't jump randomly</li>
+                  <li>Check one feature at a time (shape, then fill, then rotation)</li>
+                  <li>Ignore empty cells - focus on shapes only</li>
+                  <li>Speed matters, but accuracy is key</li>
+                </ul>
+              </div>
+            </div>
+          </>
+        }
+        onStart={handleStartFromDialog}
+      />
+
+      {!gameStarted && currentRound > totalRounds ? (
       <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
         <Card className="animate-slide-up">
           <CardContent className="text-center py-16">
@@ -257,10 +298,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
           </CardContent>
         </Card>
       </div>
-    )
-  }
-  
-  return (
+      ) : (
     <div className="max-w-6xl mx-auto px-6 sm:px-8 py-8">
       <Card className="animate-slide-up">
         <CardHeader className="text-center">
@@ -311,5 +349,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
         </CardContent>
       </Card>
     </div>
+      )}
+    </>
   )
 }

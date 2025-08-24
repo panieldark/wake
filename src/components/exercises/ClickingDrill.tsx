@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
 interface ClickingDrillProps {
   onComplete: () => void
@@ -13,6 +14,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
   const [lastClickTime, setLastClickTime] = useState<number | null>(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [isActive, setIsActive] = useState(false)
+  const [showDialog, setShowDialog] = useState(true)
   const targetCount = 10
   
   const generateTarget = useCallback(() => {
@@ -65,45 +67,54 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
     ? Math.round(clickTimes.reduce((a, b) => a + b, 0) / clickTimes.length)
     : 0
   
-  if (!isActive && clickTimes.length === 0) {
-    return (
-      <div className="max-w-2xl mx-auto px-8 py-16 space-y-8 animate-fade-in">
-        <div className="text-center space-y-4">
-          <h3 className="text-2xl font-light">Clicking Precision</h3>
-          <p className="text-gray-600">Click the targets as quickly and accurately as possible.</p>
-        </div>
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={() => setIsActive(true)}
-            className="px-8 py-3 bg-black text-white rounded-md hover:bg-gray-900 transition-colors"
-          >
-            Start
-          </button>
-          {onSkip && (
-            <button
-              onClick={onSkip}
-              className="px-8 py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              Skip
-            </button>
-          )}
-        </div>
-      </div>
-    )
+  const handleStartFromDialog = () => {
+    setShowDialog(false)
+    setIsActive(true)
   }
-  
-  if (!isActive && clickTimes.length > 0) {
-    return (
+
+  return (
+    <>
+      <ExerciseInstructionDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title="Clicking Precision Drill"
+        description="Test and improve your mouse accuracy and reaction time by clicking targets as quickly as possible."
+        instructions={
+          <>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🎯 How to Play</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Click on the appearing targets as fast as you can</li>
+                  <li>{targetCount} targets will appear one at a time</li>
+                  <li>Each target appears in a random position</li>
+                  <li>Your average click time will be measured</li>
+                </ul>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-semibold mb-2">💡 Tips</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Focus on accuracy over speed</li>
+                  <li>Keep your mouse hand relaxed</li>
+                  <li>Try to anticipate where targets might appear</li>
+                  <li>Practice smooth, controlled movements</li>
+                </ul>
+              </div>
+            </div>
+          </>
+        }
+        onStart={handleStartFromDialog}
+      />
+
+      {!isActive && clickTimes.length > 0 ? (
       <div className="max-w-2xl mx-auto px-8 py-16 text-center space-y-4 animate-fade-in">
         <h3 className="text-2xl font-light">Average reaction time: {avgTime}ms</h3>
         <p className="text-gray-600">
           {avgTime < 500 ? 'Lightning fast!' : avgTime < 700 ? 'Great speed!' : 'Good job!'}
         </p>
       </div>
-    )
-  }
-  
-  return (
+      ) : isActive ? (
     <div className="fixed inset-0 bg-white">
       <div className="fixed top-20 left-1/2 transform -translate-x-1/2 text-center">
         <div className="text-4xl font-mono font-bold">{currentTime}ms</div>
@@ -124,5 +135,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
         />
       ))}
     </div>
+      ) : null}
+    </>
   )
 }

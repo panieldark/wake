@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
 interface GoalCueingProps {
   onComplete: () => void
@@ -12,6 +13,7 @@ interface GoalCueingProps {
 export default function GoalCueing({ onComplete }: GoalCueingProps) {
   const [goal, setGoal] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [showDialog, setShowDialog] = useState(true)
   
   const handleSubmit = () => {
     if (goal.trim().length > 10) {
@@ -20,8 +22,52 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
     }
   }
   
+  const handleStartFromDialog = () => {
+    setShowDialog(false)
+  }
+
   return (
-    <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
+    <>
+      <ExerciseInstructionDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title="Goal Crystallization"
+        description="Clarify your immediate goals to boost focus and motivation."
+        instructions={
+          <>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🎯 Purpose</h4>
+                <p className="text-sm">
+                  This exercise helps you identify what you truly want to accomplish in the next hour. 
+                  By focusing on the satisfaction of completion rather than the effort required, 
+                  you can overcome procrastination and build momentum.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-semibold mb-2">💡 How to Approach This</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Think about what would make you feel satisfied in 1 hour</li>
+                  <li>Focus on the end result, not the process</li>
+                  <li>Be specific and realistic</li>
+                  <li>Choose something meaningful to you right now</li>
+                </ul>
+              </div>
+
+              <div className="p-4 bg-amber-50 rounded-lg">
+                <p className="text-sm">
+                  <strong>Remember:</strong> The goal is to create clarity and commitment. 
+                  Your answer should excite you enough to overcome inertia.
+                </p>
+              </div>
+            </div>
+          </>
+        }
+        onStart={handleStartFromDialog}
+      />
+
+      <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
       <Card className="animate-slide-up">
         <CardHeader className="text-center">
           <CardTitle>Goal Crystallization</CardTitle>
@@ -67,5 +113,6 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
         </CardContent>
       </Card>
     </div>
+    </>
   )
 }

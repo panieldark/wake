@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '../ui/button'
+import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
 interface TypingDrillProps {
   onComplete: () => void
@@ -57,6 +58,8 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
   const [errors, setErrors] = useState<number[]>([])
   const [showStretchPrompt, setShowStretchPrompt] = useState(false)
   const [stretchTimer, setStretchTimer] = useState(10)
+  const [showDialog, setShowDialog] = useState(true)
+  const [isActive, setIsActive] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const currentSentence = selectedSentences[currentSentenceIndex]
@@ -72,10 +75,10 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
   const currentStretch = stretchPrompts[currentSentenceIndex % stretchPrompts.length]
 
   useEffect(() => {
-    if (!showStretchPrompt) {
+    if (!showStretchPrompt && isActive) {
       inputRef.current?.focus()
     }
-  }, [currentSentenceIndex, showStretchPrompt])
+  }, [currentSentenceIndex, showStretchPrompt, isActive])
 
   useEffect(() => {
     if (showStretchPrompt && stretchTimer > 0) {
@@ -129,8 +132,55 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
     }
   }
 
-  if (showStretchPrompt) {
-    return (
+  const handleStartFromDialog = () => {
+    setShowDialog(false)
+    setIsActive(true)
+  }
+
+  return (
+    <>
+      <ExerciseInstructionDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title="Typing Speed & Accuracy Drill"
+        description="Improve your typing speed and accuracy by typing sentences as quickly and accurately as possible."
+        instructions={
+          <>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold mb-2">📝 How it works</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>You'll type 5 randomly selected sentences</li>
+                  <li>Type each sentence exactly as shown</li>
+                  <li>Your speed (WPM) and accuracy will be measured</li>
+                  <li>After each sentence, you'll get a stretch reminder</li>
+                </ul>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-semibold mb-2">⌨️ Tips for Success</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Focus on accuracy first, speed will follow</li>
+                  <li>Keep your fingers on the home row</li>
+                  <li>Look at the sentence, not your keyboard</li>
+                  <li>Take the stretch breaks seriously!</li>
+                </ul>
+              </div>
+            </div>
+          </>
+        }
+        onStart={handleStartFromDialog}
+      />
+
+      {!isActive ? (
+        <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
+          <Card className="animate-slide-up">
+            <CardContent className="text-center py-12">
+              <p className="text-lg text-gray-600">Preparing exercise...</p>
+            </CardContent>
+          </Card>
+        </div>
+      ) : showStretchPrompt ? (
       <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
         <Card className="animate-slide-up">
           <CardHeader className="text-center">
@@ -161,10 +211,7 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
           </CardContent>
         </Card>
       </div>
-    )
-  }
-
-  return (
+        ) : (
     <div className="max-w-4xl mx-auto px-6 sm:px-8 py-8">
       <Card className="animate-slide-up">
         <CardHeader className="text-center">
@@ -223,5 +270,7 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
         </CardContent>
       </Card>
     </div>
+      )}
+    </>
   )
 }

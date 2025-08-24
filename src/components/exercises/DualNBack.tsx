@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
 interface DualNBackProps {
   onComplete: () => void
@@ -20,6 +21,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   const [score, setScore] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [showInstructions, setShowInstructions] = useState(true)
+  const [showDialog, setShowDialog] = useState(true)
   
   const generateSequence = useCallback(() => {
     const seq: { position: number; letter: string }[] = []
@@ -158,8 +160,54 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   
   const current = sequence[currentIndex]
   
-  if (showInstructions) {
-    return (
+  const handleStartFromDialog = () => {
+    setShowDialog(false)
+  }
+
+  return (
+    <>
+      <ExerciseInstructionDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title={`Dual ${n}-Back Training`}
+        description={`This exercise will challenge your working memory by requiring you to remember both visual positions and auditory letters from ${n} steps back.`}
+        instructions={
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold mb-2">👁️ Visual Task</h4>
+                <p className="text-sm">
+                  Watch squares light up in a 3×3 grid. Press <kbd className="px-2 py-1 bg-white rounded text-xs">A</kbd> when 
+                  the position matches {n} steps back.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🔊 Auditory Task</h4>
+                <p className="text-sm">
+                  Listen to spoken letters. Press <kbd className="px-2 py-1 bg-white rounded text-xs">L</kbd> when 
+                  the letter matches {n} steps back.
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-amber-50 p-4 rounded-lg mt-4">
+              <p className="text-sm">
+                <strong>Remember:</strong> You're comparing the current stimulus with what appeared {n} steps ago. 
+                Both tasks run simultaneously, so stay focused!
+              </p>
+            </div>
+          </>
+        }
+        onStart={handleStartFromDialog}
+        additionalButtons={
+          <Button variant="outline" onClick={() => speakLetter('A')}>
+            Test Audio
+          </Button>
+        }
+      />
+      
+      {showInstructions ? (
       <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
         <Card className="animate-slide-up">
           <CardHeader className="text-center">
@@ -184,25 +232,18 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
           </CardContent>
         </Card>
       </div>
-    )
-  }
-  
-  if (showFeedback) {
-    return (
-      <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
-        <Card className="animate-slide-up">
-          <CardContent className="text-center py-12">
-            <div className="text-6xl font-bold text-gray-900 mb-4">{score}%</div>
-            <p className="text-lg text-gray-600">
-              {score >= 80 ? 'Excellent!' : score >= 60 ? 'Good job!' : 'Keep practicing!'}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-  
-  return (
+      ) : showFeedback ? (
+        <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
+          <Card className="animate-slide-up">
+            <CardContent className="text-center py-12">
+              <div className="text-6xl font-bold text-gray-900 mb-4">{score}%</div>
+              <p className="text-lg text-gray-600">
+                {score >= 80 ? 'Excellent!' : score >= 60 ? 'Good job!' : 'Keep practicing!'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
     <div className="max-w-2xl mx-auto px-8 py-16 space-y-8">
       <div className="text-center">
         <p className="text-gray-600">Trial {currentIndex + 1} / {sequence.length}</p>
@@ -238,5 +279,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
         </button>
       </div>
     </div>
+      )}
+    </>
   )
 }

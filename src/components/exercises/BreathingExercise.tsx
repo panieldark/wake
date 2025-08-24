@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
 interface BreathingExerciseProps {
   onComplete: () => void
@@ -21,6 +22,7 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
   const [cycles, setCycles] = useState(0)
   const [phaseStartTime, setPhaseStartTime] = useState<number>(0)
   const [progress, setProgress] = useState(0)
+  const [showDialog, setShowDialog] = useState(true)
   const totalCycles = 4 // Increased from 3 to 4 for a bit longer
   
   useEffect(() => {
@@ -59,9 +61,55 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
     setIsActive(true)
     setPhaseStartTime(Date.now())
   }
+
+  const handleStartFromDialog = () => {
+    setShowDialog(false)
+  }
   
-  if (!isActive && cycles === 0) {
-    return (
+  return (
+    <>
+      <ExerciseInstructionDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title="Box Breathing Exercise"
+        description="A calming breathing technique to reduce stress and improve focus."
+        instructions={
+          <>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🫁 The 4-4-4-4 Pattern</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Breathe IN for 4 seconds</li>
+                  <li>HOLD for 4 seconds</li>
+                  <li>Breathe OUT for 4 seconds</li>
+                  <li>HOLD for 4 seconds</li>
+                </ul>
+                <p className="text-sm mt-2">Repeat this cycle 4 times.</p>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🎯 Benefits</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Activates your parasympathetic nervous system</li>
+                  <li>Reduces stress and anxiety</li>
+                  <li>Improves concentration and mental clarity</li>
+                  <li>Helps transition into focused work</li>
+                </ul>
+              </div>
+
+              <div className="p-4 bg-amber-50 rounded-lg">
+                <p className="text-sm">
+                  <strong>Pro tip:</strong> Follow the on-screen visual cues. The circle will expand and contract 
+                  to guide your breathing rhythm.
+                </p>
+              </div>
+            </div>
+          </>
+        }
+        onStart={handleStartFromDialog}
+      />
+
+      {!isActive && cycles === 0 ? (
       <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
         <Card className="animate-slide-up">
           <CardHeader className="text-center">
@@ -80,11 +128,7 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
           </CardContent>
         </Card>
       </div>
-    )
-  }
-  
-  if (!isActive && cycles >= totalCycles) {
-    return (
+      ) : !isActive && cycles >= totalCycles ? (
       <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
         <Card className="animate-slide-up">
           <CardContent className="text-center py-16">
@@ -96,27 +140,26 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
           </CardContent>
         </Card>
       </div>
-    )
-  }
-  
-  const currentPhase = phases[currentPhaseIndex]
-  const isBreathingIn = currentPhaseIndex === 0
-  const isBreathingOut = currentPhaseIndex === 2
-  
-  // Calculate scale for breathing effect
-  const baseScale = 0.8
-  const maxScale = 1.2
-  let scale = baseScale
-  
-  if (isBreathingIn) {
-    scale = baseScale + (progress / 100) * (maxScale - baseScale)
-  } else if (isBreathingOut) {
-    scale = maxScale - (progress / 100) * (maxScale - baseScale)
-  } else {
-    scale = isBreathingIn ? maxScale : baseScale
-  }
-  
-  return (
+      ) : isActive ? (
+        (() => {
+          const currentPhase = phases[currentPhaseIndex]
+          const isBreathingIn = currentPhaseIndex === 0
+          const isBreathingOut = currentPhaseIndex === 2
+          
+          // Calculate scale for breathing effect
+          const baseScale = 0.8
+          const maxScale = 1.2
+          let scale = baseScale
+          
+          if (isBreathingIn) {
+            scale = baseScale + (progress / 100) * (maxScale - baseScale)
+          } else if (isBreathingOut) {
+            scale = maxScale - (progress / 100) * (maxScale - baseScale)
+          } else {
+            scale = isBreathingIn ? maxScale : baseScale
+          }
+          
+          return (
     <div 
       className="fixed inset-0 flex items-center justify-center transition-all duration-500"
       style={{
@@ -155,5 +198,9 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
         </div>
       </div>
     </div>
+          )
+        })()
+      ) : null}
+    </>
   )
 }

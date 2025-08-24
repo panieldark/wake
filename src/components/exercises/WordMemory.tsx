@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
 interface WordMemoryProps {
   onComplete: () => void
@@ -29,15 +30,17 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
   const [userInput, setUserInput] = useState('')
   const [score, setScore] = useState<number | null>(null)
   const [wordList] = useState(() => generateRandomWords())
+  const [showDialog, setShowDialog] = useState(true)
+  const [isActive, setIsActive] = useState(false)
   
   useEffect(() => {
-    if (phase === 'memorize' && timeLeft > 0) {
+    if (isActive && phase === 'memorize' && timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
       return () => clearTimeout(timer)
-    } else if (phase === 'memorize' && timeLeft === 0) {
+    } else if (isActive && phase === 'memorize' && timeLeft === 0) {
       setPhase('recall')
     }
-  }, [phase, timeLeft])
+  }, [isActive, phase, timeLeft])
   
   const handleSubmit = () => {
     const userWords = userInput.toLowerCase().split(/[\s,]+/).filter(w => w.length > 0)
@@ -46,8 +49,55 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
     setTimeout(onComplete, 2000)
   }
   
+  const handleStartFromDialog = () => {
+    setShowDialog(false)
+    setIsActive(true)
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-6 sm:px-8 py-8">
+    <>
+      <ExerciseInstructionDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        title="Word Memory Challenge"
+        description="Test your short-term memory by memorizing and recalling a list of words."
+        instructions={
+          <>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🧠 How it Works</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>You'll see 10 random words for 15 seconds</li>
+                  <li>Memorize as many as you can</li>
+                  <li>When time's up, recall and type all the words</li>
+                  <li>Order doesn't matter - just remember as many as possible</li>
+                </ul>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-semibold mb-2">💡 Memory Tips</h4>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Create mental associations between words</li>
+                  <li>Group words by category or theme</li>
+                  <li>Visualize the words as vivid images</li>
+                  <li>Try creating a story that connects the words</li>
+                </ul>
+              </div>
+
+              <div className="p-4 bg-amber-50 rounded-lg">
+                <p className="text-sm">
+                  <strong>Scoring:</strong> You'll get 1 point for each correctly recalled word. 
+                  Aim for 7+ words for a great score!
+                </p>
+              </div>
+            </div>
+          </>
+        }
+        onStart={handleStartFromDialog}
+      />
+
+      {isActive ? (
+        <div className="max-w-4xl mx-auto px-6 sm:px-8 py-8">
       <Card className="animate-slide-up">
         {phase === 'memorize' ? (
           <>
@@ -114,5 +164,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
         )}
       </Card>
     </div>
+      ) : null}
+    </>
   )
 }
