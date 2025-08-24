@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { RotateCcw } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
 interface ClickingDrillProps {
@@ -16,21 +18,21 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
   const [isActive, setIsActive] = useState(false)
   const [showDialog, setShowDialog] = useState(true)
   const targetCount = 10
-  
+
   const generateTarget = useCallback(() => {
     const margin = 50
     const x = Math.random() * (window.innerWidth - 2 * margin) + margin
     const y = Math.random() * (window.innerHeight - 200) + 100
     return { x, y, id: Date.now() }
   }, [])
-  
+
   useEffect(() => {
     if (isActive && targets.length === 0) {
       setTargets([generateTarget()])
       setLastClickTime(Date.now())
     }
   }, [isActive, targets.length, generateTarget])
-  
+
   useEffect(() => {
     if (isActive && lastClickTime) {
       const interval = setInterval(() => {
@@ -39,7 +41,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
       return () => clearInterval(interval)
     }
   }, [isActive, lastClickTime])
-  
+
   const playSuccessSound = () => {
     const audio = new Audio('/sounds/ding.mp3')
     audio.volume = 0.5
@@ -48,12 +50,12 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
 
   const handleTargetClick = () => {
     playSuccessSound()
-    
+
     const clickTime = Date.now()
     if (lastClickTime) {
       setClickTimes([...clickTimes, clickTime - lastClickTime])
     }
-    
+
     if (clickTimes.length + 1 >= targetCount) {
       setIsActive(false)
       setTimeout(onComplete, 2000)
@@ -62,14 +64,23 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
       setLastClickTime(clickTime)
     }
   }
-  
-  const avgTime = clickTimes.length > 0 
+
+  const avgTime = clickTimes.length > 0
     ? Math.round(clickTimes.reduce((a, b) => a + b, 0) / clickTimes.length)
     : 0
-  
+
   const handleStartFromDialog = () => {
     setShowDialog(false)
     setIsActive(true)
+  }
+
+  const handleRestart = () => {
+    setTargets([])
+    setClickTimes([])
+    setLastClickTime(null)
+    setCurrentTime(0)
+    setIsActive(false)
+    setShowDialog(true)
   }
 
   return (
@@ -91,7 +102,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
                   <li>Your average click time will be measured</li>
                 </ul>
               </div>
-              
+
               <div className="p-4 bg-green-50 rounded-lg">
                 <h4 className="font-semibold mb-2">💡 Tips</h4>
                 <ul className="text-sm space-y-1 list-disc list-inside">
@@ -108,34 +119,44 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
       />
 
       {!isActive && clickTimes.length > 0 ? (
-      <div className="max-w-2xl mx-auto px-8 py-16 text-center space-y-4 animate-fade-in">
-        <h3 className="text-2xl font-light">Average reaction time: {avgTime}ms</h3>
-        <p className="text-gray-600">
-          {avgTime < 500 ? 'Lightning fast!' : avgTime < 700 ? 'Great speed!' : 'Good job!'}
-        </p>
-      </div>
-      ) : isActive ? (
-    <div className="fixed inset-0 bg-white">
-      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 text-center">
-        <div className="text-4xl font-mono font-bold">{currentTime}ms</div>
-        <div className="text-sm text-gray-500 mt-2">
-          {clickTimes.length + 1} / {targetCount}
+        <div className="max-w-2xl mx-auto px-8 py-16 text-center space-y-4 animate-fade-in">
+          <h3 className="text-2xl font-light">Average reaction time: {avgTime}ms</h3>
+          <p className="text-gray-600">
+            {avgTime < 500 ? 'Lightning fast!' : avgTime < 700 ? 'Great speed!' : 'Good job!'}
+          </p>
         </div>
-      </div>
-      
-      {targets.map((target) => (
-        <button
-          key={target.id}
-          onClick={handleTargetClick}
-          className="absolute w-8 h-8 bg-black rounded-full hover:scale-110 transition-transform"
-          style={{
-            left: `${target.x - 16}px`,
-            top: `${target.y - 16}px`,
-          }}
-        />
-      ))}
-    </div>
+      ) : isActive ? (
+        <div className="fixed inset-0 bg-white">
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 text-center">
+            <div className="text-4xl font-mono font-bold">{currentTime}ms</div>
+            <div className="text-sm text-gray-500 mt-2">
+              {clickTimes.length + 1} / {targetCount}
+            </div>
+          </div>
+
+          {targets.map((target) => (
+            <button
+              key={target.id}
+              onClick={handleTargetClick}
+              className="absolute w-8 h-8 bg-black rounded-full hover:scale-110 transition-transform"
+              style={{
+                left: `${target.x - 16}px`,
+                top: `${target.y - 16}px`,
+              }}
+            />
+          ))}
+        </div>
       ) : null}
+
+      <Button
+        onClick={handleRestart}
+        variant="outline"
+        size="sm"
+        className="fixed bottom-4 right-4 z-50 bg-white/90 hover:bg-white shadow-lg"
+      >
+        <RotateCcw className="w-4 h-4 mr-1" />
+        Restart Exercise
+      </Button>
     </>
   )
 }

@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
@@ -164,6 +165,17 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     setShowDialog(false)
   }
 
+  const handleRestart = () => {
+    setSequence([])
+    setCurrentIndex(0)
+    setUserResponses([])
+    setShowFeedback(false)
+    setScore(0)
+    setIsActive(false)
+    setShowInstructions(true)
+    setShowDialog(true)
+  }
+
   return (
     <>
       <ExerciseInstructionDialog
@@ -274,6 +286,16 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
           </div>
         </div>
       )}
+
+      <Button
+        onClick={handleRestart}
+        variant="outline"
+        size="sm"
+        className="fixed bottom-4 right-4 z-50 bg-white/90 hover:bg-white shadow-lg"
+      >
+        <RotateCcw className="w-4 h-4 mr-1" />
+        Restart Exercise
+      </Button>
     </>
   )
 }

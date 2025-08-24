@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { RotateCcw } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '../ui/button'
 import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
@@ -67,7 +68,7 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
   const stretchPrompts = [
     "Stretch your wrists",
     "Stretch your hands",
-    "Stretch your fingers", 
+    "Stretch your fingers",
     "Stretch your neck",
     "Fix your posture"
   ]
@@ -137,6 +138,19 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
     setIsActive(true)
   }
 
+  const handleRestart = () => {
+    setSentenceIndex(0)
+    setUserInput('')
+    setStartTime(null)
+    setWpm(null)
+    setAccuracy(null)
+    setErrors([])
+    setShowStretchPrompt(false)
+    setStretchTimer(10)
+    setIsActive(false)
+    setShowDialog(true)
+  }
+
   return (
     <>
       <ExerciseInstructionDialog
@@ -156,7 +170,7 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
                   <li>After each sentence, you'll get a stretch reminder</li>
                 </ul>
               </div>
-              
+
               <div className="p-4 bg-green-50 rounded-lg">
                 <h4 className="font-semibold mb-2">⌨️ Tips for Success</h4>
                 <ul className="text-sm space-y-1 list-disc list-inside">
@@ -181,96 +195,106 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
           </Card>
         </div>
       ) : showStretchPrompt ? (
-      <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
-        <Card className="animate-slide-up">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">
-              {currentStretch}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 text-center">
+        <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
+          <Card className="animate-slide-up">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">
+                {currentStretch}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 text-center">
 
-            <div className="space-y-2">
-              <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-gray-700">{stretchTimer}</span>
-              </div>
-              <p className="text-sm text-gray-500">
-                Next sentence starts in {stretchTimer} seconds
-              </p>
-            </div>
-
-            <Button
-              onClick={() => {
-                setShowStretchPrompt(false)
-                setStretchTimer(10)
-              }}
-              variant="secondary"
-            >
-              Skip Stretch
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-        ) : (
-    <div className="max-w-4xl mx-auto px-6 sm:px-8 py-8">
-      <Card className="animate-slide-up">
-        <CardHeader className="text-center">
-          <CardTitle>Type the sentence</CardTitle>
-          <CardDescription>
-            Sentence {currentSentenceIndex + 1} of {selectedSentences.length}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="p-6 bg-gray-50 rounded-lg">
-            <div className="text-xl leading-relaxed font-mono">
-              {currentSentence.split('').map((char, index) => (
-                <span
-                  key={index}
-                  className={
-                    index < userInput.length
-                      ? errors.includes(index)
-                        ? 'bg-red-200 text-red-900'
-                        : 'bg-green-100 text-green-900'
-                      : 'text-gray-700'
-                  }
-                >
-                  {char}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <Input
-            ref={inputRef}
-            type="text"
-            value={userInput}
-            onChange={(e) => handleInputChange(e.target.value)}
-            className="text-lg font-mono h-14"
-            placeholder="Start typing..."
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-          />
-
-          {wpm && accuracy && (
-            <div className="text-center py-4 space-y-2 animate-fade-in">
-              <div className="flex justify-center gap-8">
-                <div>
-                  <p className="text-3xl font-bold text-gray-900">{wpm}</p>
-                  <p className="text-sm text-gray-600">WPM</p>
+              <div className="space-y-2">
+                <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                  <span className="text-2xl font-bold text-gray-700">{stretchTimer}</span>
                 </div>
-                <div>
-                  <p className="text-3xl font-bold text-gray-900">{accuracy}%</p>
-                  <p className="text-sm text-gray-600">Accuracy</p>
+                <p className="text-sm text-gray-500">
+                  Next sentence starts in {stretchTimer} seconds
+                </p>
+              </div>
+
+              <Button
+                onClick={() => {
+                  setShowStretchPrompt(false)
+                  setStretchTimer(10)
+                }}
+                variant="secondary"
+              >
+                Skip Stretch
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="max-w-4xl mx-auto px-6 sm:px-8 py-8">
+          <Card className="animate-slide-up">
+            <CardHeader className="text-center">
+              <CardTitle>Type the sentence</CardTitle>
+              <CardDescription>
+                Sentence {currentSentenceIndex + 1} of {selectedSentences.length}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="p-6 bg-gray-50 rounded-lg">
+                <div className="text-xl leading-relaxed font-mono">
+                  {currentSentence.split('').map((char, index) => (
+                    <span
+                      key={index}
+                      className={
+                        index < userInput.length
+                          ? errors.includes(index)
+                            ? 'bg-red-200 text-red-900'
+                            : 'bg-green-100 text-green-900'
+                          : 'text-gray-700'
+                      }
+                    >
+                      {char}
+                    </span>
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+
+              <Input
+                ref={inputRef}
+                type="text"
+                value={userInput}
+                onChange={(e) => handleInputChange(e.target.value)}
+                className="text-lg font-mono h-14"
+                placeholder="Start typing..."
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+              />
+
+              {wpm && accuracy && (
+                <div className="text-center py-4 space-y-2 animate-fade-in">
+                  <div className="flex justify-center gap-8">
+                    <div>
+                      <p className="text-3xl font-bold text-gray-900">{wpm}</p>
+                      <p className="text-sm text-gray-600">WPM</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-gray-900">{accuracy}%</p>
+                      <p className="text-sm text-gray-600">Accuracy</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
+
+      <Button
+        onClick={handleRestart}
+        variant="outline"
+        size="sm"
+        className="fixed bottom-4 right-4 z-50 bg-white/90 hover:bg-white shadow-lg"
+      >
+        <RotateCcw className="w-4 h-4 mr-1" />
+        Restart Exercise
+      </Button>
     </>
   )
 }

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { RotateCcw } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
@@ -189,6 +190,22 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
     setIsActive(true)
   }
 
+  const handleRestart = () => {
+    setPhase('memorize')
+    setTimeLeft(15)
+    setUserInput('')
+    setRecalledWords([])
+    setIsActive(false)
+    setRecognitionWords([])
+    setSelectedWords(new Set())
+    setRecognitionResults(null)
+    setShowResults(false)
+    setCanContinue(false)
+    setCountdown(3)
+    setShowingWords(false)
+    setShowDialog(true)
+  }
+
   return (
     <>
       <style jsx global>{`
@@ -241,10 +258,9 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
               <div className="p-4 bg-blue-50 rounded-lg">
                 <h4 className="font-semibold mb-2">🧠 How it Works</h4>
                 <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>Memorize 12 words in 15 seconds</li>
-                  <li>Braindump: Type all words you remember</li>
-                  <li>Recognition: Select ONLY the original words from a mixed list (includes decoys)</li>
-                  <li>Get scored on both recall and recognition</li>
+                  <li><strong>Memorize</strong> 12 words in 15 seconds</li>
+                  <li><strong>Recall:</strong> Braindump all words you remember</li>
+                  <li><strong>Recognition:</strong> Select ONLY the original words from a mixed list (includes decoys)</li>
                 </ul>
               </div>
             </div>
@@ -254,217 +270,228 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
       />
 
       {isActive ? (
-        <div className="max-w-4xl mx-auto px-6 sm:px-8 py-8">
-          <Card className="animate-slide-up">
-            {phase === 'memorize' ? (
-              <>
-                <CardHeader className="text-center">
-                  <CardTitle>Memorize these words</CardTitle>
-                  <CardDescription>
-                    {showingWords ? (
-                      <>
-                        <span className="text-2xl font-semibold text-gray-900">{timeLeft}</span>
-                        <span className="text-sm ml-2">seconds remaining</span>
-                      </>
-                    ) : (
-                      <span className="text-sm">Get ready...</span>
-                    )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {!showingWords ? (
-                    <div className="flex items-center justify-center py-20">
-                      <div className="text-6xl font-bold text-gray-400 animate-pulse">
-                        {countdown}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-4 gap-3 py-8 justify-items-center max-w-2xl mx-auto">
-                      {wordList.map((word, index) => (
-                        <motion.div
-                          key={`word-${index}`}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: 0.6,
-                            ease: "easeOut",
-                            delay: index * 0.05
-                          }}
-                          className="text-center p-3 bg-gray-50 rounded-lg font-medium text-base min-w-[120px]"
-                        >
-                          {word}
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </>
-            ) : phase === 'braindump' ? (
-              <>
-                <CardHeader className="text-center">
-                  <CardTitle>Recall</CardTitle>
-                  <CardDescription>Type all the words you remember</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <Input
-                      ref={inputRef}
-                      value={userInput}
-                      onChange={(e) => setUserInput(e.target.value)}
-                      onKeyDown={handleWordInput}
-                      placeholder="Type a word and press space..."
-                      className="text-lg"
-                      autoFocus
-                    />
-
-                    <div className="flex flex-wrap gap-2 min-h-[100px] p-4 bg-gray-50 rounded-lg">
-                      {recalledWords.map((item, index) => (
-                        <div
-                          key={index}
-                          className={cn(
-                            "px-3 py-1 rounded-full text-sm font-medium animate-slide-up inline-block h-fit",
-                            item.isCorrect
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          )}
-                        >
-                          {item.word}
+        <>
+          <div className="max-w-4xl mx-auto px-6 sm:px-8 py-8">
+            <Card className="animate-slide-up">
+              {phase === 'memorize' ? (
+                <>
+                  <CardHeader className="text-center">
+                    <CardTitle>Memorize these words</CardTitle>
+                    <CardDescription>
+                      {showingWords ? (
+                        <>
+                          <span className="text-2xl font-semibold text-gray-900">{timeLeft}</span>
+                          <span className="text-sm ml-2">seconds remaining</span>
+                        </>
+                      ) : (
+                        <span className="text-sm">Get ready...</span>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {!showingWords ? (
+                      <div className="flex items-center justify-center py-20">
+                        <div className="text-6xl font-bold text-gray-400 animate-pulse">
+                          {countdown}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={handleBraindumpComplete}
-                    className="w-full"
-                    size="lg"
-                  >
-                    Reveal Original Words
-                  </Button>
-                </CardContent>
-              </>
-            ) : phase === 'review' ? (
-              <>
-                <CardHeader className="text-center">
-                  <CardTitle>Original Words</CardTitle>
-                  <CardDescription>Here are the words you were asked to recall</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-4 gap-3 py-8 justify-items-center max-w-2xl mx-auto">
-                    {wordList.map((word, index) => (
-                      <div
-                        key={index}
-                        className="text-center p-3 bg-gray-50 rounded-lg font-medium text-base min-w-[120px] border border-gray-200"
-                      >
-                        {word}
                       </div>
-                    ))}
-                  </div>
-
-                  <Button
-                    onClick={handleReviewComplete}
-                    className="w-full"
-                    size="lg"
-                  >
-                    Continue to Recognition
-                  </Button>
-                </CardContent>
-              </>
-            ) : phase === 'recognition' ? (
-              <>
-                <CardHeader className="text-center">
-                  <CardTitle>Recognition</CardTitle>
-                  <CardDescription>Select only the words that were in the original list. Some words below are decoys!</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {recognitionWords.map((word, index) => {
-                      const isSelected = selectedWords.has(word)
-                      const isCorrect = wordList.includes(word)
-                      const isIncorrect = showResults && isSelected && !isCorrect
-                      const isMissed = showResults && !isSelected && isCorrect
-
-                      return (
-                        <div key={index} className="relative">
-                          <button
-                            onClick={() => !showResults && toggleWordSelection(word)}
-                            disabled={showResults}
-                            className={cn(
-                              "w-full p-3 rounded-lg font-medium transition-all duration-150",
-                              showResults && isCorrect && isSelected
-                                ? "bg-green-700/70 text-white cursor-default"
-                                : showResults && isIncorrect
-                                  ? "bg-red-700/70 text-white cursor-default"
-                                  : showResults
-                                    ? "bg-gray-100 cursor-default"
-                                    : isSelected
-                                      ? "bg-neutral-600 text-white scale-95"
-                                      : "bg-gray-100 hover:bg-gray-200 hover:scale-98"
-                            )}
+                    ) : (
+                      <div className="grid grid-cols-4 gap-3 py-8 justify-items-center max-w-2xl mx-auto">
+                        {wordList.map((word, index) => (
+                          <motion.div
+                            key={`word-${index}`}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.6,
+                              ease: "easeOut",
+                              delay: index * 0.05
+                            }}
+                            className="text-center p-3 bg-gray-50 rounded-lg font-medium text-base min-w-[120px]"
                           >
                             {word}
-                          </button>
-                          {showResults && isMissed && (
-                            <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
-                              <div className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center">
-                                !
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </>
+              ) : phase === 'braindump' ? (
+                <>
+                  <CardHeader className="text-center">
+                    <CardTitle>Recall</CardTitle>
+                    <CardDescription>Type all the words you remember</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                      <Input
+                        ref={inputRef}
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        onKeyDown={handleWordInput}
+                        placeholder="Type a word and press space..."
+                        className="text-lg"
+                        autoFocus
+                      />
 
-                  {!showResults ? (
+                      <div className="flex flex-wrap gap-2 min-h-[100px] p-4 bg-gray-50 rounded-lg">
+                        {recalledWords.map((item, index) => (
+                          <div
+                            key={index}
+                            className={cn(
+                              "px-3 py-1 rounded-full text-sm font-medium animate-slide-up inline-block h-fit",
+                              item.isCorrect
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            )}
+                          >
+                            {item.word}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     <Button
-                      onClick={handleRecognitionSubmit}
+                      onClick={handleBraindumpComplete}
                       className="w-full"
                       size="lg"
-                      disabled={selectedWords.size === 0}
                     >
-                      Submit ({selectedWords.size} selected)
+                      Reveal Original Words
                     </Button>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4 text-center text-sm">
-                        <div>
-                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-1">✓</div>
-                          <div className="text-2xl font-bold text-green-600">
-                            {selectedWords.size > 0 ? Array.from(selectedWords).filter(word => wordList.includes(word)).length : 0}
-                          </div>
-                          <div className="text-gray-600">Correct</div>
+                  </CardContent>
+                </>
+              ) : phase === 'review' ? (
+                <>
+                  <CardHeader className="text-center">
+                    <CardTitle>Original Words</CardTitle>
+                    <CardDescription>Here are the words you were asked to recall</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-4 gap-3 py-8 justify-items-center max-w-2xl mx-auto">
+                      {wordList.map((word, index) => (
+                        <div
+                          key={index}
+                          className="text-center p-3 bg-gray-50 rounded-lg font-medium text-base min-w-[120px] border border-gray-200"
+                        >
+                          {word}
                         </div>
-                        <div>
-                          <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-1">✗</div>
-                          <div className="text-2xl font-bold text-red-600">
-                            {selectedWords.size > 0 ? Array.from(selectedWords).filter(word => !wordList.includes(word)).length : 0}
-                          </div>
-                          <div className="text-gray-600">Wrong</div>
-                        </div>
-                        <div>
-                          <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-1">!</div>
-                          <div className="text-2xl font-bold text-amber-600">
-                            {wordList.filter(word => recognitionWords.includes(word) && !selectedWords.has(word)).length}
-                          </div>
-                          <div className="text-gray-600">Missed</div>
-                        </div>
-                      </div>
-
-                      {canContinue && (
-                        <div className="flex justify-end">
-                          <Button onClick={handleFinalContinue} size="sm">
-                            Continue
-                          </Button>
-                        </div>
-                      )}
+                      ))}
                     </div>
-                  )}
-                </CardContent>
-              </>
-            ) : null}
-          </Card>
-        </div>
+
+                    <Button
+                      onClick={handleReviewComplete}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Continue to Recognition
+                    </Button>
+                  </CardContent>
+                </>
+              ) : phase === 'recognition' ? (
+                <>
+                  <CardHeader className="text-center">
+                    <CardTitle>Recognition</CardTitle>
+                    <CardDescription>Select only the words that were in the original list. Some words below are decoys!</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {recognitionWords.map((word, index) => {
+                        const isSelected = selectedWords.has(word)
+                        const isCorrect = wordList.includes(word)
+                        const isIncorrect = showResults && isSelected && !isCorrect
+                        const isMissed = showResults && !isSelected && isCorrect
+
+                        return (
+                          <div key={index} className="relative">
+                            <button
+                              onClick={() => !showResults && toggleWordSelection(word)}
+                              disabled={showResults}
+                              className={cn(
+                                "w-full p-3 rounded-lg font-medium transition-all duration-150",
+                                showResults && isCorrect && isSelected
+                                  ? "bg-green-700/70 text-white cursor-default"
+                                  : showResults && isIncorrect
+                                    ? "bg-red-700/70 text-white cursor-default"
+                                    : showResults
+                                      ? "bg-gray-100 cursor-default"
+                                      : isSelected
+                                        ? "bg-neutral-600 text-white scale-95"
+                                        : "bg-gray-100 hover:bg-gray-200 hover:scale-98"
+                              )}
+                            >
+                              {word}
+                            </button>
+                            {showResults && isMissed && (
+                              <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+                                <div className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center">
+                                  !
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {!showResults ? (
+                      <Button
+                        onClick={handleRecognitionSubmit}
+                        className="w-full"
+                        size="lg"
+                        disabled={selectedWords.size === 0}
+                      >
+                        Submit ({selectedWords.size} selected)
+                      </Button>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-4 text-center text-sm">
+                          <div>
+                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-1">✓</div>
+                            <div className="text-2xl font-bold text-green-600">
+                              {selectedWords.size > 0 ? Array.from(selectedWords).filter(word => wordList.includes(word)).length : 0}
+                            </div>
+                            <div className="text-gray-600">Correct</div>
+                          </div>
+                          <div>
+                            <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-1">✗</div>
+                            <div className="text-2xl font-bold text-red-600">
+                              {selectedWords.size > 0 ? Array.from(selectedWords).filter(word => !wordList.includes(word)).length : 0}
+                            </div>
+                            <div className="text-gray-600">Wrong</div>
+                          </div>
+                          <div>
+                            <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-1">!</div>
+                            <div className="text-2xl font-bold text-amber-600">
+                              {wordList.filter(word => recognitionWords.includes(word) && !selectedWords.has(word)).length}
+                            </div>
+                            <div className="text-gray-600">Missed</div>
+                          </div>
+                        </div>
+
+                        {canContinue && (
+                          <div className="flex justify-end">
+                            <Button onClick={handleFinalContinue} size="sm">
+                              Continue
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </>
+              ) : null}
+            </Card>
+          </div>
+          <Button
+            onClick={handleRestart}
+            variant="outline"
+            size="sm"
+            className="fixed bottom-4 right-4 z-50 bg-white/90 hover:bg-white shadow-lg"
+          >
+            <RotateCcw className="w-4 h-4 mr-1" />
+            Restart Exercise
+          </Button>
+        </>
       ) : null}
     </>
   )
