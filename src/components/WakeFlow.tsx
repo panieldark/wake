@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import WordMemory from './exercises/WordMemory'
-import DualNBack from './exercises/DualNBack'
+import BreathingExercise from './exercises/BreathingExercise'
 import ClickingDrill from './exercises/ClickingDrill'
+import DualNBack from './exercises/DualNBack'
+import GoalCueing from './exercises/GoalCueing'
+import MentalArithmetic from './exercises/MentalArithmetic'
 import TypingDrill from './exercises/TypingDrill'
 import VisualSearch from './exercises/VisualSearch'
-import MentalArithmetic from './exercises/MentalArithmetic'
-import GoalCueing from './exercises/GoalCueing'
-import BreathingExercise from './exercises/BreathingExercise'
+import WordMemory from './exercises/WordMemory'
 
 interface WakeFlowProps {
   onComplete: () => void
@@ -27,7 +27,7 @@ const exercises = [
 
 export default function WakeFlow({ onComplete }: WakeFlowProps) {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0)
-  
+
   const handleNext = () => {
     if (currentExerciseIndex < exercises.length - 1) {
       setCurrentExerciseIndex(currentExerciseIndex + 1)
@@ -35,18 +35,18 @@ export default function WakeFlow({ onComplete }: WakeFlowProps) {
       onComplete()
     }
   }
-  
+
   const handleSkip = () => {
     handleNext()
   }
-  
+
   const jumpToExercise = (index: number) => {
     setCurrentExerciseIndex(index)
   }
-  
+
   const CurrentExercise = exercises[currentExerciseIndex].component
   const isSkippable = exercises[currentExerciseIndex].skippable
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-lg z-10 border-b border-gray-100">
@@ -60,7 +60,7 @@ export default function WakeFlow({ onComplete }: WakeFlowProps) {
             </div>
             <div className="hidden sm:block flex-1 max-w-sm">
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-gray-600 to-gray-900 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${((currentExerciseIndex + 1) / exercises.length) * 100}%` }}
                 />
@@ -69,22 +69,21 @@ export default function WakeFlow({ onComplete }: WakeFlowProps) {
           </div>
         </div>
       </div>
-      
+
       <div className="flex-1 pt-24 pb-8">
         <CurrentExercise onComplete={handleNext} onSkip={isSkippable ? handleSkip : undefined} />
       </div>
-      
+
       {/* Debug Table of Contents */}
       <div className="fixed bottom-4 left-4 bg-white border border-gray-200 rounded-lg p-3 shadow-lg z-20 max-w-xs">
-        <p className="text-xs font-medium text-gray-500 mb-2">Debug: Jump to Exercise</p>
+        <p className="text-xs font-medium text-gray-500 mb-2">Jump to Exercise</p>
         <div className="grid grid-cols-2 gap-1">
           {exercises.map((exercise, index) => (
             <button
               key={index}
               onClick={() => jumpToExercise(index)}
-              className={`text-xs px-2 py-1 rounded text-left hover:bg-gray-100 ${
-                currentExerciseIndex === index ? 'bg-blue-100 text-blue-800' : 'text-gray-600'
-              }`}
+              className={`text-xs px-2 py-1 rounded text-left hover:bg-gray-100 ${currentExerciseIndex === index ? 'bg-blue-100 text-blue-800' : 'text-gray-600'
+                }`}
             >
               {index + 1}. {exercise.name}
             </button>
