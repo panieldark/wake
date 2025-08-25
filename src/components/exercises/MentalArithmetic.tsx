@@ -94,6 +94,7 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
 
   const handleStartFromDialog = () => {
     setShowDialog(false)
+    setIsActive(true)
   }
 
   const handleRestart = () => {
@@ -129,50 +130,17 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
       <ExerciseInstructionDialog
         open={showDialog}
         onOpenChange={setShowDialog}
-        title="Mental Arithmetic Challenge"
-        description="Solve 5 math problems correctly to complete the exercise!"
+        title="Mental Arithmetic"
+        description="Solve 5 math problems correctly"
         instructions={
-          <>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-2">🧮 How it Works</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>Solve 5 problems correctly to complete the exercise</li>
-                  <li>Problems include addition, subtraction, and multiplication</li>
-                  <li>Type your answer and press Enter to submit</li>
-                  <li>You'll get feedback after each answer</li>
-                </ul>
-              </div>
-
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-semibold mb-2">💪 Tips for Speed</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>Don't overthink - trust your first instinct</li>
-                  <li>Use mental shortcuts (like 9×6 = 10×6 - 6)</li>
-                  <li>Take your time - accuracy matters more than speed</li>
-                  <li>Keep your fingers on the number keys</li>
-                </ul>
-              </div>
-            </div>
-          </>
+          <p className="text-center">
+            Type your answer and press Enter
+          </p>
         }
         onStart={handleStartFromDialog}
       />
 
-      {!isActive && !showResults ? (
-        <div className="max-w-2xl mx-auto px-8 py-16 space-y-8 animate-fade-in">
-          <div className="text-center space-y-4">
-            <h3 className="text-2xl font-light">Mental Arithmetic</h3>
-            <p className="text-gray-600">Solve 5 problems correctly to complete the exercise</p>
-          </div>
-          <button
-            onClick={() => setIsActive(true)}
-            className="w-full max-w-xs mx-auto block py-3 bg-black text-white rounded-md hover:bg-gray-900 transition-colors"
-          >
-            Start
-          </button>
-        </div>
-      ) : showResults ? (
+      {showResults ? (
         <div className="max-w-2xl mx-auto px-8 py-16 text-center space-y-4 animate-fade-in">
           <h3 className="text-2xl font-light">Exercise Complete!</h3>
           <p className="text-lg text-gray-600">
@@ -182,7 +150,7 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
             Accuracy: {Math.round((correctCount / totalAttempts) * 100)}%
           </p>
         </div>
-      ) : (
+      ) : isActive ? (
         <div className="max-w-2xl mx-auto px-8 py-16 space-y-8">
           <div className="text-center space-y-2">
             <p className="text-lg text-gray-600">Progress: {correctCount} / {targetCorrect} correct</p>
@@ -226,7 +194,7 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       <Button
         onClick={handleRestart}

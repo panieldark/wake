@@ -57,7 +57,7 @@ type RecalledWord = {
 }
 
 export default function WordMemory({ onComplete }: WordMemoryProps) {
-  const [phase, setPhase] = useState<'memorize' | 'recognition' | 'braindump' | 'review' | 'results'>('memorize')
+  const [phase, setPhase] = useState<'memorize' | 'recognition' | 'reveal' | 'braindump' | 'review' | 'results'>('memorize')
   const [timeLeft, setTimeLeft] = useState(20)
   const [userInput, setUserInput] = useState('')
   const [recalledWords, setRecalledWords] = useState<RecalledWord[]>([])
@@ -71,6 +71,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
   const [canContinue, setCanContinue] = useState(false)
   const [countdown, setCountdown] = useState(3)
   const [showingWords, setShowingWords] = useState(false)
+  const [revealCountdown, setRevealCountdown] = useState(10) // 10 seconds for reveal phase
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Handle initial countdown (3-2-1)
@@ -99,28 +100,38 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
   useEffect(() => {
     if (phase === 'recognition' && recognitionWords.length === 0) {
       const { decoys, numCorrect } = generateDecoyWords(wordList)
-      
+
       // Favor words from the end of the list (recency effect bias)
       // Take more words from the second half, fewer from the first half
       const firstHalfSize = Math.floor(wordList.length / 2)
       const secondHalfSize = wordList.length - firstHalfSize
-      
+
       // Take 30% from first half, 70% from second half
       const fromFirstHalf = Math.max(1, Math.floor(numCorrect * 0.3))
       const fromSecondHalf = numCorrect - fromFirstHalf
-      
+
       const firstHalf = wordList.slice(0, firstHalfSize)
       const secondHalf = wordList.slice(firstHalfSize)
-      
+
       // Randomly select from each half
       const selectedFromFirst = firstHalf.sort(() => Math.random() - 0.5).slice(0, Math.min(fromFirstHalf, firstHalf.length))
       const selectedFromSecond = secondHalf.sort(() => Math.random() - 0.5).slice(0, Math.min(fromSecondHalf, secondHalf.length))
-      
+
       const correctWordsToShow = [...selectedFromFirst, ...selectedFromSecond]
       const allWords = [...correctWordsToShow, ...decoys]
       setRecognitionWords(allWords.sort(() => Math.random() - 0.5))
     }
   }, [phase, wordList, recognitionWords.length])
+
+  // Handle reveal countdown
+  useEffect(() => {
+    if (phase === 'reveal' && revealCountdown > 0) {
+      const timer = setTimeout(() => setRevealCountdown(revealCountdown - 1), 1000)
+      return () => clearTimeout(timer)
+    } else if (phase === 'reveal' && revealCountdown === 0) {
+      setPhase('braindump')
+    }
+  }, [phase, revealCountdown])
 
   const handleWordInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === ' ' || e.key === 'Enter' || e.key === ',') {
@@ -151,6 +162,11 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
   }
 
   const handleRecognitionComplete = () => {
+    setRevealCountdown(10) // Reset countdown for reveal phase
+    setPhase('reveal')
+  }
+
+  const handleRevealComplete = () => {
     setPhase('braindump')
   }
 
@@ -220,6 +236,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
     setCanContinue(false)
     setCountdown(3)
     setShowingWords(false)
+    setRevealCountdown(10)
     setShowDialog(true)
   }
 
@@ -276,8 +293,8 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
                 {/* <h4 className="font-semibold mb-2">🧠 How it Works</h4> */}
                 <ul className="text-sm space-y-1 list-inside">
                   {/* <li><strong>Memorize</strong> 12 words in 20 seconds</li> */}
-                  <li><strong>Recall:</strong> Braindump all words you remember</li>
                   <li><strong>Recognition:</strong> Select ONLY the original words from a mixed list (includes decoys)</li>
+                  <li><strong>Recall:</strong> Braindump all words you remember</li>
                 </ul>
               </div>
             </div>
@@ -392,8 +409,8 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
                             key={index}
                             className={cn(
                               "text-center p-3 rounded-lg font-medium text-base min-w-[120px] border relative",
-                              wasRecalled 
-                                ? "bg-green-50 border-green-300" 
+                              wasRecalled
+                                ? "bg-green-50 border-green-300"
                                 : "bg-gray-50 border-gray-200"
                             )}
                           >
@@ -505,12 +522,44 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
                         {canContinue && (
                           <div className="flex justify-end">
                             <Button onClick={handleRecognitionComplete} size="sm">
-                              Continue to Recall
+                              Reveal Original Words
                             </Button>
                           </div>
                         )}
                       </div>
                     )}
+                  </CardContent>
+                </>
+              ) : phase === 'reveal' ? (
+                <>
+                  <CardHeader className="text-center">
+                    <CardTitle>Original Words</CardTitle>
+                    <CardDescription>
+                      Here are the words you were asked to memorize
+                      <span className="block mt-2 text-lg font-semibold text-gray-900">
+                        {revealCountdown} seconds
+                      </span>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-4 gap-3 py-8 justify-items-center max-w-2xl mx-auto">
+                      {wordList.map((word, index) => (
+                        <div
+                          key={index}
+                          className="text-center p-3 bg-blue-50 rounded-lg font-medium text-base min-w-[120px] border border-blue-200"
+                        >
+                          {word}
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button
+                      onClick={handleRevealComplete}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Continue to Recall ({revealCountdown}s)
+                    </Button>
                   </CardContent>
                 </>
               ) : null}

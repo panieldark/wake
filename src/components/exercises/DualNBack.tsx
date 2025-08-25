@@ -18,6 +18,8 @@ const LETTERS = ["B", "C", "D", "G", "H", "K", "P", "Q", "T", "W"]
 interface HowlSprite {
   play: (sprite: string) => void
   once: (event: string, callback: () => void) => void
+  stop: () => void
+  unload: () => void
 }
 
 declare global {
@@ -32,7 +34,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   const [N, setN] = useState(2)
   const [N_plus] = useState(20)
   const [iFrequency] = useState(4000)
-  const [myInterval, setMyInterval] = useState<number>(0)
+  const [myInterval, setMyInterval] = useState<NodeJS.Timeout | null>(null)
   const [timestep_start, setTimestep_start] = useState(0)
   const [vis_stack, setVis_stack] = useState<number[]>([])
   const [letter_stack, setLetter_stack] = useState<number[]>([])
@@ -321,7 +323,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
       // Execute doTimestep function directly in interval, like the reference
       let currentTime = 0
-      let gameIntervalId: number
+      let gameIntervalId: NodeJS.Timeout
 
       const doTimestepInterval = () => {
         if (currentTime < visual_stack.length) {
@@ -374,7 +376,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
           currentTime += 1
         } else {
           clearInterval(gameIntervalId)
-          setMyInterval(0)
+          setMyInterval(null)
 
           // Demo is complete, show prompt to try for real
           console.log('DEMO COMPLETED - setting demoComplete to true')
@@ -391,7 +393,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
       doTimestepInterval()
 
       // Then continue with the interval
-      gameIntervalId = setInterval(doTimestepInterval, iFrequency) as unknown as number
+      gameIntervalId = setInterval(doTimestepInterval, iFrequency)
       setMyInterval(gameIntervalId)
 
     } else {
@@ -411,7 +413,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
           // Execute doTimestep function directly in interval, like the reference
           let currentTime = 0
-          let gameIntervalId: number
+          let gameIntervalId: NodeJS.Timeout
 
           const doTimestepInterval = () => {
             if (currentTime < visual_stack.length) {
@@ -454,11 +456,27 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   // Cleanup interval on unmount
   useEffect(() => {
     return () => {
-      if (myInterval > 0) {
+      if (myInterval) {
         clearInterval(myInterval)
       }
     }
   }, [myInterval])
+
+  // Separate cleanup for audio on component unmount
+  useEffect(() => {
+    return () => {
+      // Stop and unload audio when component unmounts
+      if (spritesRef.current) {
+        spritesRef.current.stop()
+        spritesRef.current.unload()
+        spritesRef.current = null
+      }
+      // Also stop all Howler sounds globally as a safety measure
+      if (window.Howler) {
+        window.Howler.stop()
+      }
+    }
+  }, []) // Empty dependency array ensures this runs only on unmount
 
   const handleStartFromDialog = () => {
     setShowDialog(false)
@@ -466,9 +484,16 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   }
 
   const handleRestart = () => {
-    if (myInterval > 0) {
+    if (myInterval) {
       clearInterval(myInterval)
-      setMyInterval(0)
+      setMyInterval(null)
+    }
+    // Stop any playing audio
+    if (spritesRef.current) {
+      spritesRef.current.stop()
+    }
+    if (window.Howler) {
+      window.Howler.stop()
     }
     setVis_stack([])
     setLetter_stack([])
@@ -759,7 +784,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
                       doTimestepInterval()
                       const gameIntervalId = setInterval(doTimestepInterval, iFrequency)
-                      setMyInterval(gameIntervalId as unknown as number)
+                      setMyInterval(gameIntervalId)
                     }
                   }, 1000)
                 }}
