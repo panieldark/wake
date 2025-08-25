@@ -88,6 +88,8 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
     } else if (showStretchPrompt && stretchTimer === 0) {
       setShowStretchPrompt(false)
       setStretchTimer(10)
+      setWpm(null)
+      setAccuracy(null)
     }
   }, [showStretchPrompt, stretchTimer])
 
@@ -117,16 +119,14 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
       setAccuracy(calculatedAccuracy)
 
       if (currentSentenceIndex < selectedSentences.length - 1) {
-        setTimeout(() => {
-          setShowStretchPrompt(true)
-          setStretchTimer(10)
-          setSentenceIndex(currentSentenceIndex + 1)
-          setUserInput('')
-          setStartTime(null)
-          setErrors([])
-          setWpm(null)
-          setAccuracy(null)
-        }, 2000)
+        // Show stretch prompt immediately, no delay
+        setShowStretchPrompt(true)
+        setStretchTimer(10)
+        setSentenceIndex(currentSentenceIndex + 1)
+        setUserInput('')
+        setStartTime(null)
+        setErrors([])
+        // Don't reset WPM and accuracy - keep them for display during stretch
       } else {
         setTimeout(onComplete, 2000)
       }
@@ -213,10 +213,28 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
                 </p>
               </div>
 
+              {wpm && accuracy && (
+                <div className="py-4 space-y-2 border-t">
+                  <p className="text-sm text-gray-600 mb-2">Previous sentence results:</p>
+                  <div className="flex justify-center gap-8">
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">{wpm}</p>
+                      <p className="text-sm text-gray-600">WPM</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">{accuracy}%</p>
+                      <p className="text-sm text-gray-600">Accuracy</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <Button
                 onClick={() => {
                   setShowStretchPrompt(false)
                   setStretchTimer(10)
+                  setWpm(null)
+                  setAccuracy(null)
                 }}
                 variant="secondary"
               >

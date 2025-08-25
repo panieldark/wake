@@ -12,12 +12,15 @@ interface ClickingDrillProps {
 
 export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps) {
   const [targets, setTargets] = useState<{ x: number; y: number; id: number }[]>([])
+  const [clickCount, setClickCount] = useState(0)
   const [clickTimes, setClickTimes] = useState<number[]>([])
-  const [lastClickTime, setLastClickTime] = useState<number | null>(null)
+  const [lastTargetTime, setLastTargetTime] = useState<number | null>(null)
   const [currentTime, setCurrentTime] = useState(0)
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [remainingTime, setRemainingTime] = useState(20000) // 20 seconds in ms
   const [isActive, setIsActive] = useState(false)
   const [showDialog, setShowDialog] = useState(true)
-  const targetCount = 10
+  const gameDuration = 20000 // 20 seconds
 
   const generateTarget = useCallback(() => {
     const margin = 50
@@ -28,19 +31,39 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
 
   useEffect(() => {
     if (isActive && targets.length === 0) {
+      const targetTime = Date.now()
       setTargets([generateTarget()])
-      setLastClickTime(Date.now())
+      setLastTargetTime(targetTime)
+      if (!startTime) {
+        setStartTime(targetTime)
+      }
     }
-  }, [isActive, targets.length, generateTarget])
+  }, [isActive, targets.length, generateTarget, startTime])
 
   useEffect(() => {
-    if (isActive && lastClickTime) {
+    if (isActive && startTime) {
       const interval = setInterval(() => {
-        setCurrentTime(Date.now() - lastClickTime)
+        const elapsed = Date.now() - startTime
+        const remaining = Math.max(0, gameDuration - elapsed)
+        setRemainingTime(remaining)
+        
+        if (remaining === 0) {
+          setIsActive(false)
+          setTimeout(onComplete, 2000)
+        }
       }, 10)
       return () => clearInterval(interval)
     }
-  }, [isActive, lastClickTime])
+  }, [isActive, startTime, gameDuration, onComplete])
+
+  useEffect(() => {
+    if (isActive && lastTargetTime) {
+      const interval = setInterval(() => {
+        setCurrentTime(Date.now() - lastTargetTime)
+      }, 10)
+      return () => clearInterval(interval)
+    }
+  }, [isActive, lastTargetTime])
 
   const playSuccessSound = () => {
     const audio = new Audio('/sounds/ding.mp3')
@@ -50,22 +73,25 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
 
   const handleTargetClick = () => {
     playSuccessSound()
-
+    
     const clickTime = Date.now()
-    if (lastClickTime) {
-      setClickTimes([...clickTimes, clickTime - lastClickTime])
+    if (lastTargetTime) {
+      const reactionTime = clickTime - lastTargetTime
+      setClickTimes(prev => [...prev, reactionTime])
     }
-
-    if (clickTimes.length + 1 >= targetCount) {
-      setIsActive(false)
-      setTimeout(onComplete, 2000)
-    } else {
-      setTargets([generateTarget()])
-      setLastClickTime(clickTime)
-    }
+    
+    setClickCount(prev => prev + 1)
+    const targetTime = Date.now()
+    setTargets([generateTarget()])
+    setLastTargetTime(targetTime)
+    setCurrentTime(0)
   }
 
-  const avgTime = clickTimes.length > 0
+  const clicksPerSecond = clickCount > 0 && startTime
+    ? (clickCount / ((gameDuration - remainingTime) / 1000)).toFixed(2)
+    : '0.00'
+  
+  const avgReactionTime = clickTimes.length > 0
     ? Math.round(clickTimes.reduce((a, b) => a + b, 0) / clickTimes.length)
     : 0
 
@@ -76,9 +102,12 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
 
   const handleRestart = () => {
     setTargets([])
+    setClickCount(0)
     setClickTimes([])
-    setLastClickTime(null)
+    setLastTargetTime(null)
     setCurrentTime(0)
+    setStartTime(null)
+    setRemainingTime(gameDuration)
     setIsActive(false)
     setShowDialog(true)
   }
@@ -97,9 +126,9 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
                 <h4 className="font-semibold mb-2">🎯 How to Play</h4>
                 <ul className="text-sm space-y-1 list-disc list-inside">
                   <li>Click on the appearing targets as fast as you can</li>
-                  <li>{targetCount} targets will appear one at a time</li>
+                  <li>You have 20 seconds to click as many targets as possible</li>
                   <li>Each target appears in a random position</li>
-                  <li>Your average click time will be measured</li>
+                  <li>Your clicks per second will be measured</li>
                 </ul>
               </div>
 
@@ -118,11 +147,15 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
         onStart={handleStartFromDialog}
       />
 
-      {!isActive && clickTimes.length > 0 ? (
+      {!isActive && clickCount > 0 ? (
         <div className="max-w-2xl mx-auto px-8 py-16 text-center space-y-4 animate-fade-in">
-          <h3 className="text-2xl font-light">Average reaction time: {avgTime}ms</h3>
+          <h3 className="text-2xl font-light">Total clicks: {clickCount}</h3>
+          <div className="space-y-2">
+            <p className="text-lg text-gray-600">Clicks per second: {clicksPerSecond}</p>
+            <p className="text-lg text-gray-600">Average reaction time: {avgReactionTime}ms</p>
+          </div>
           <p className="text-gray-600">
-            {avgTime < 500 ? 'Lightning fast!' : avgTime < 700 ? 'Great speed!' : 'Good job!'}
+            {parseFloat(clicksPerSecond) > 2.5 ? 'Lightning fast!' : parseFloat(clicksPerSecond) > 1.5 ? 'Great speed!' : 'Good job!'}
           </p>
         </div>
       ) : isActive ? (
@@ -130,7 +163,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
           <div className="fixed top-20 left-1/2 transform -translate-x-1/2 text-center">
             <div className="text-4xl font-mono font-bold">{currentTime}ms</div>
             <div className="text-sm text-gray-500 mt-2">
-              {clickTimes.length + 1} / {targetCount}
+              Clicks: {clickCount} | Time left: {(remainingTime / 1000).toFixed(1)}s
             </div>
           </div>
 

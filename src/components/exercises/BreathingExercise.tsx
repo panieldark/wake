@@ -24,6 +24,8 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
   const [phaseStartTime, setPhaseStartTime] = useState<number>(0)
   const [progress, setProgress] = useState(0)
   const [showDialog, setShowDialog] = useState(true)
+  const [showWorkPrompt, setShowWorkPrompt] = useState(false)
+  const [workCountdown, setWorkCountdown] = useState(120) // 2 minutes
   const totalCycles = 4 // Increased from 3 to 4 for a bit longer
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
 
           if (newCycles >= totalCycles) {
             setIsActive(false)
-            setTimeout(onComplete, 2000)
+            setTimeout(() => setShowWorkPrompt(true), 2000)
           }
         }
       }
@@ -56,7 +58,16 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
 
     const animationFrame = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(animationFrame)
-  }, [isActive, currentPhaseIndex, cycles, phaseStartTime, onComplete])
+  }, [isActive, currentPhaseIndex, cycles, phaseStartTime])
+
+  useEffect(() => {
+    if (showWorkPrompt && workCountdown > 0) {
+      const timer = setTimeout(() => setWorkCountdown(workCountdown - 1), 1000)
+      return () => clearTimeout(timer)
+    } else if (showWorkPrompt && workCountdown === 0) {
+      onComplete()
+    }
+  }, [showWorkPrompt, workCountdown, onComplete])
 
   const startExercise = () => {
     setIsActive(true)
@@ -74,6 +85,8 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
     setPhaseStartTime(0)
     setProgress(0)
     setShowDialog(true)
+    setShowWorkPrompt(false)
+    setWorkCountdown(120)
   }
 
   return (
@@ -138,7 +151,7 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
             </CardContent>
           </Card>
         </div>
-      ) : !isActive && cycles >= totalCycles ? (
+      ) : !isActive && cycles >= totalCycles && !showWorkPrompt ? (
         <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
           <Card className="animate-slide-up">
             <CardContent className="text-center py-16">
@@ -146,6 +159,30 @@ export default function BreathingExercise({ onComplete }: BreathingExerciseProps
                 <div className="text-6xl">✨</div>
                 <h3 className="text-3xl font-light">You're ready.</h3>
                 <p className="text-lg text-gray-600">Mind sharp. Body calm. Time to create.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : showWorkPrompt ? (
+        <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
+          <Card className="animate-slide-up">
+            <CardContent className="text-center py-16">
+              <div className="space-y-6">
+                <div className="text-6xl">🚀</div>
+                <h3 className="text-3xl font-light">Time to work</h3>
+                <p className="text-lg text-gray-600">
+                  Leave this tab behind and start settling in to your most important work.
+                </p>
+                <div className="mt-8">
+                  <div className="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                    <span className="text-4xl font-bold text-gray-700">
+                      {Math.floor(workCountdown / 60)}:{String(workCountdown % 60).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4">
+                    This timer will complete automatically
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
