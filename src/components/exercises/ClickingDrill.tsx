@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
 import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
 
@@ -20,6 +21,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
   const [remainingTime, setRemainingTime] = useState(20000) // 20 seconds in ms
   const [isActive, setIsActive] = useState(false)
   const [showDialog, setShowDialog] = useState(true)
+  const [hitTargets, setHitTargets] = useState<{ id: number; x: number; y: number }[]>([])
   const gameDuration = 20000 // 20 seconds
 
   const generateTarget = useCallback(() => {
@@ -46,7 +48,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
         const elapsed = Date.now() - startTime
         const remaining = Math.max(0, gameDuration - elapsed)
         setRemainingTime(remaining)
-        
+
         if (remaining === 0) {
           setIsActive(false)
           setTimeout(onComplete, 2000)
@@ -71,15 +73,29 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
     audio.play().catch(console.error)
   }
 
-  const handleTargetClick = () => {
+  const handleTargetClick = (e: React.MouseEvent<HTMLButtonElement>, targetId: number) => {
     playSuccessSound()
-    
+
+    // Get click position relative to viewport
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = rect.left + rect.width / 2
+    const y = rect.top + rect.height / 2
+
+    // Add hit target for green fade animation
+    const hitId = Date.now()
+    setHitTargets(prev => [...prev, { id: hitId, x, y }])
+
+    // Remove hit target after animation
+    setTimeout(() => {
+      setHitTargets(prev => prev.filter(h => h.id !== hitId))
+    }, 300)
+
     const clickTime = Date.now()
     if (lastTargetTime) {
       const reactionTime = clickTime - lastTargetTime
       setClickTimes(prev => [...prev, reactionTime])
     }
-    
+
     setClickCount(prev => prev + 1)
     const targetTime = Date.now()
     setTargets([generateTarget()])
@@ -90,7 +106,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
   const clicksPerSecond = clickCount > 0 && startTime
     ? (clickCount / ((gameDuration - remainingTime) / 1000)).toFixed(2)
     : '0.00'
-  
+
   const avgReactionTime = clickTimes.length > 0
     ? Math.round(clickTimes.reduce((a, b) => a + b, 0) / clickTimes.length)
     : 0
@@ -110,6 +126,7 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
     setRemainingTime(gameDuration)
     setIsActive(false)
     setShowDialog(true)
+    setHitTargets([])
   }
 
   return (
@@ -162,22 +179,49 @@ export default function ClickingDrill({ onComplete, onSkip }: ClickingDrillProps
         <div className="fixed inset-0 bg-white">
           <div className="fixed top-20 left-1/2 transform -translate-x-1/2 text-center">
             <div className="text-4xl font-mono font-bold">{currentTime}ms</div>
-            <div className="text-sm text-gray-500 mt-2">
+            <div className="text-sm text-gray-500 mt-2 tabular-nums">
               Clicks: {clickCount} | Time left: {(remainingTime / 1000).toFixed(1)}s
             </div>
           </div>
 
           {targets.map((target) => (
-            <button
+            <motion.button
               key={target.id}
-              onClick={handleTargetClick}
-              className="absolute w-8 h-8 bg-black rounded-full hover:scale-110 transition-transform"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 975.5,
+                damping: 96.4,
+                mass: 5.4,
+              }}
+              onClick={(e) => handleTargetClick(e, target.id)}
+              className="absolute w-8 h-8 bg-gray-900 rounded-full shadow-lg"
               style={{
                 left: `${target.x - 16}px`,
                 top: `${target.y - 16}px`,
               }}
             />
           ))}
+
+          {/* Hit feedback dots */}
+          <AnimatePresence>
+            {hitTargets.map((hitTarget) => (
+              <motion.div
+                key={hitTarget.id}
+                initial={{ scale: 1, opacity: 1 }}
+                animate={{ scale: 1.2, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="absolute w-8 h-8 bg-green-500 rounded-full pointer-events-none"
+                style={{
+                  left: hitTarget.x - 16,
+                  top: hitTarget.y - 16,
+                }}
+              />
+            ))}
+          </AnimatePresence>
         </div>
       ) : null}
 

@@ -1,0 +1,47 @@
+#!/usr/bin/env sh
+
+echo "🚀 Running pre-push checks..."
+
+# Store initial git status
+initial_status=$(git status --porcelain)
+
+echo "📦 Installing dependencies..."
+bun install
+install_exit_code=$?
+
+# Check if bun install failed
+if [ $install_exit_code -ne 0 ]; then
+    echo "❌ Bun install failed"
+    exit 1
+fi
+
+echo "🔍 Running lint..."
+bun run lint
+lint_exit_code=$?
+
+# Check if lint made any changes by comparing git status
+current_status=$(git status --porcelain)
+if [ "$initial_status" != "$current_status" ]; then
+    echo "🔧 Lint changes detected. Please commit these changes before pushing."
+    echo "Changed files:"
+    git status --porcelain
+    exit 1
+fi
+
+echo "🏗️ Running build..."
+bun run build
+build_exit_code=$?
+
+# Check if any command failed
+if [ $lint_exit_code -ne 0 ] || [ $build_exit_code -ne 0 ]; then
+    echo "❌ Pre-push checks failed"
+    if [ $lint_exit_code -ne 0 ]; then
+        echo "  - Lint failed"
+    fi
+    if [ $build_exit_code -ne 0 ]; then
+        echo "  - Build failed"
+    fi
+    exit 1
+fi
+
+echo "✅ All pre-push checks passed!"

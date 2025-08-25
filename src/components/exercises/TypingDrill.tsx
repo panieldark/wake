@@ -111,8 +111,11 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
     if (value === currentSentence) {
       const endTime = Date.now()
       const timeInMinutes = (endTime - startTime!) / 60000
-      const wordsTyped = currentSentence.split(' ').length
-      const calculatedWpm = Math.round(wordsTyped / timeInMinutes)
+      // Standard WPM calculation uses 5 characters per word
+      const standardWords = currentSentence.length / 5
+      // Use the higher of actual words or standard words
+      const wordsTyped = Math.max(currentSentence.split(' ').length, standardWords)
+      const calculatedWpm = Math.ceil(wordsTyped / timeInMinutes) // Round up
       const calculatedAccuracy = Math.round(((currentSentence.length - errors.length) / currentSentence.length) * 100)
 
       setWpm(calculatedWpm)

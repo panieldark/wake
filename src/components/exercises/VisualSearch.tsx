@@ -148,7 +148,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
 
     // Smaller tokens - scale down as level increases for more challenge
     const size = Math.max(24, 36 - Math.floor(level / 3)) // Starts at 36px, goes down to 24px
-    const color = "#3B82F6"
+    const color = "#1f2937" // Dark gray for a more professional look
     const fill = cell.filled ? color : "transparent"
     const style = { transform: `rotate(${cell.rotation}deg)` }
 
@@ -156,12 +156,13 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
       case 'circle':
         return (
           <div
-            className="rounded-full border-2"
+            className="rounded-full border-2 shadow-sm"
             style={{
               width: `${size}px`,
               height: `${size}px`,
               borderColor: color,
               backgroundColor: fill,
+              borderWidth: '2px',
               ...style
             }}
           />
@@ -169,12 +170,13 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
       case 'square':
         return (
           <div
-            className="border-2"
+            className="border-2 shadow-sm"
             style={{
               width: `${size}px`,
               height: `${size}px`,
               borderColor: color,
               backgroundColor: fill,
+              borderWidth: '2px',
               ...style
             }}
           />
@@ -205,12 +207,13 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
       case 'diamond':
         return (
           <div
-            className="border-2"
+            className="border-2 shadow-sm"
             style={{
               width: `${size * 0.7}px`,
               height: `${size * 0.7}px`,
               borderColor: color,
               backgroundColor: fill,
+              borderWidth: '2px',
               transform: `${style.transform} rotate(45deg)`,
             }}
           />
@@ -321,7 +324,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
             <CardContent className="space-y-6">
               <div className="flex justify-center gap-8">
                 {/* Grid 1 */}
-                <div className="grid grid-cols-5 gap-1 p-3 bg-gray-100 rounded-lg">
+                <div className="grid grid-cols-5 gap-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   {grid1.map((cell, index) => (
                     <div key={`grid1-${index}`} className="w-12 h-12 flex items-center justify-center">
                       {renderShape(cell)}
@@ -330,7 +333,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 </div>
 
                 {/* Grid 2 */}
-                <div className="grid grid-cols-5 gap-1 p-3 bg-gray-100 rounded-lg">
+                <div className="grid grid-cols-5 gap-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   {grid2.map((cell, index) => (
                     <div key={`grid2-${index}`} className="w-12 h-12 flex items-center justify-center">
                       {renderShape(cell)}
@@ -344,7 +347,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                   onClick={() => checkMatch(true)}
                   disabled={!gameStarted}
                   size="lg"
-                  className="min-w-[120px] bg-green-500 hover:bg-green-600"
+                  className="min-w-[120px] bg-green-200/80 hover:bg-gray-200 hover:scale-95 transition-all duration-150 text-gray-700"
                 >
                   Match
                 </Button>
@@ -352,7 +355,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                   onClick={() => checkMatch(false)}
                   disabled={!gameStarted}
                   size="lg"
-                  className="min-w-[120px] bg-red-500 hover:bg-red-600"
+                  className="min-w-[120px] bg-red-200/90 hover:bg-gray-200 hover:scale-95 transition-all duration-150 text-gray-700"
                 >
                   Mismatch
                 </Button>

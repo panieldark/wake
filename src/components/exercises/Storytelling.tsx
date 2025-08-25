@@ -50,7 +50,7 @@ export default function Storytelling({ onComplete }: StorytellingProps) {
           <button
             onClick={handleSubmit}
             disabled={story.trim().length < 50}
-            className="w-full py-3 bg-black text-white rounded-md hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 hover:scale-98 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit
           </button>
