@@ -164,7 +164,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
   const [isActive, setIsActive] = useState(false);
   const [recognitionWords, setRecognitionWords] = useState<string[]>([]);
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
-  const [recognitionResults, setRecognitionResults] = useState<{
+  const [_recognitionResults, setRecognitionResults] = useState<{
     correct: number;
     incorrect: number;
   } | null>(null);
@@ -205,7 +205,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
       // Favor words from the end of the list (recency effect bias)
       // Take more words from the second half, fewer from the first half
       const firstHalfSize = Math.floor(wordList.length / 2);
-      const secondHalfSize = wordList.length - firstHalfSize;
+      const _secondHalfSize = wordList.length - firstHalfSize;
 
       // Take 30% from first half, 70% from second half
       const fromFirstHalf = Math.max(1, Math.floor(numCorrect * 0.3));
@@ -404,23 +404,21 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
         title="Word Memory Challenge"
         description="Memorize these 12 words"
         instructions={
-          <>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                {/* <h4 className="font-semibold mb-2">🧠 How it Works</h4> */}
-                <ul className="text-sm space-y-1 list-inside">
-                  {/* <li><strong>Memorize</strong> 12 words in 20 seconds</li> */}
-                  <li>
-                    <strong>Recognition:</strong> Select ONLY the original words
-                    from a mixed list (includes decoys)
-                  </li>
-                  <li>
-                    <strong>Recall:</strong> Braindump all words you remember
-                  </li>
-                </ul>
-              </div>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              {/* <h4 className="font-semibold mb-2">🧠 How it Works</h4> */}
+              <ul className="text-sm space-y-1 list-inside">
+                {/* <li><strong>Memorize</strong> 12 words in 20 seconds</li> */}
+                <li>
+                  <strong>Recognition:</strong> Select ONLY the original words
+                  from a mixed list (includes decoys)
+                </li>
+                <li>
+                  <strong>Recall:</strong> Braindump all words you remember
+                </li>
+              </ul>
             </div>
-          </>
+          </div>
         }
         onStart={handleStartFromDialog}
       />
@@ -596,6 +594,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
                         return (
                           <div key={index} className="relative">
                             <button
+                              type="button"
                               onClick={() =>
                                 !showResults && toggleWordSelection(word)
                               }

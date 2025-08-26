@@ -47,39 +47,37 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
         title="Goal Crystallization"
         description="Clarify your immediate goals to boost focus and motivation."
         instructions={
-          <>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-2">🎯 Purpose</h4>
-                <p className="text-sm">
-                  This exercise helps you identify what you truly want to
-                  accomplish in the next hour. By focusing on the satisfaction
-                  of completion rather than the effort required, you can
-                  overcome procrastination and build momentum.
-                </p>
-              </div>
-
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-semibold mb-2">💡 How to Approach This</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>
-                    Think about what would make you feel satisfied in 1 hour
-                  </li>
-                  <li>Focus on the end result, not the process</li>
-                  <li>Be specific and realistic</li>
-                  <li>Choose something meaningful to you right now</li>
-                </ul>
-              </div>
-
-              <div className="p-4 bg-amber-50 rounded-lg">
-                <p className="text-sm">
-                  <strong>Remember:</strong> The goal is to create clarity and
-                  commitment. Your answer should excite you enough to overcome
-                  inertia.
-                </p>
-              </div>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-semibold mb-2">🎯 Purpose</h4>
+              <p className="text-sm">
+                This exercise helps you identify what you truly want to
+                accomplish in the next hour. By focusing on the satisfaction of
+                completion rather than the effort required, you can overcome
+                procrastination and build momentum.
+              </p>
             </div>
-          </>
+
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-semibold mb-2">💡 How to Approach This</h4>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                <li>
+                  Think about what would make you feel satisfied in 1 hour
+                </li>
+                <li>Focus on the end result, not the process</li>
+                <li>Be specific and realistic</li>
+                <li>Choose something meaningful to you right now</li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-amber-50 rounded-lg">
+              <p className="text-sm">
+                <strong>Remember:</strong> The goal is to create clarity and
+                commitment. Your answer should excite you enough to overcome
+                inertia.
+              </p>
+            </div>
+          </div>
         }
         onStart={handleStartFromDialog}
       />

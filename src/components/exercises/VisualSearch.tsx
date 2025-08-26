@@ -84,20 +84,23 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
     // Decide if the grids should match or not, randomly
     if (Math.random() >= 0.5) {
       // Choose a random non-null cell to modify
-      const filledPositions = newGrid1.reduce<number[]>(
-        (acc, cell, index) => (cell ? [...acc, index] : acc),
-        [],
-      );
+      const filledPositions = newGrid1.reduce<number[]>((acc, cell, index) => {
+        if (cell) acc.push(index);
+        return acc;
+      }, []);
 
       if (filledPositions.length > 0) {
         const randomIndex =
           filledPositions[Math.floor(Math.random() * filledPositions.length)];
         if (newGrid2[randomIndex]) {
-          newGrid2[randomIndex] = {
-            ...newGrid2[randomIndex]!,
-            filled: !newGrid2[randomIndex]!.filled,
-            rotation: Math.floor(Math.random() * 4) * 90, // Random rotation: 0, 90, 180, or 270 degrees
-          };
+          const existing = newGrid2[randomIndex];
+          if (existing) {
+            newGrid2[randomIndex] = {
+              ...existing,
+              filled: !existing.filled,
+              rotation: Math.floor(Math.random() * 4) * 90, // Random rotation: 0, 90, 180, or 270 degrees
+            };
+          }
         }
       }
     }
@@ -138,17 +141,17 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
     }, 100);
   };
 
-  const startGame = () => {
+  const startGame = useCallback(() => {
     setGameStarted(true);
     setCurrentRound(1);
     setLevel(3);
     setScore(0);
     newRound();
-  };
+  }, [newRound]);
 
   useEffect(() => {
     startGame();
-  }, []);
+  }, [startGame]);
 
   const renderShape = (cell: Cell) => {
     if (!cell) return null;
@@ -284,33 +287,30 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
         title="Visual Feature Matching"
         description="Find matching features between two grids of shapes while filtering out distractions."
         instructions={
-          <>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-2">🔍 How to Play</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>Two grids will appear with various shapes</li>
-                  <li>Find if ANY features match between the grids</li>
-                  <li>Features include: shape type, fill, and rotation</li>
-                  <li>Click "Match" or "No Match" based on what you find</li>
-                  <li>Difficulty increases as you progress</li>
-                </ul>
-              </div>
-
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-semibold mb-2">🎯 Strategy Tips</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>Scan systematically - don't jump randomly</li>
-                  <li>
-                    Check one feature at a time (shape, then fill, then
-                    rotation)
-                  </li>
-                  <li>Ignore empty cells - focus on shapes only</li>
-                  <li>Speed matters, but accuracy is key</li>
-                </ul>
-              </div>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-semibold mb-2">🔍 How to Play</h4>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                <li>Two grids will appear with various shapes</li>
+                <li>Find if ANY features match between the grids</li>
+                <li>Features include: shape type, fill, and rotation</li>
+                <li>Click "Match" or "No Match" based on what you find</li>
+                <li>Difficulty increases as you progress</li>
+              </ul>
             </div>
-          </>
+
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-semibold mb-2">🎯 Strategy Tips</h4>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                <li>Scan systematically - don't jump randomly</li>
+                <li>
+                  Check one feature at a time (shape, then fill, then rotation)
+                </li>
+                <li>Ignore empty cells - focus on shapes only</li>
+                <li>Speed matters, but accuracy is key</li>
+              </ul>
+            </div>
+          </div>
         }
         onStart={handleStartFromDialog}
       />

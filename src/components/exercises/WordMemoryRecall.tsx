@@ -137,10 +137,13 @@ export default function WordMemoryRecall({
   };
 
   // If no original words provided, complete immediately
-  if (!originalWords || originalWords.length === 0) {
-    useEffect(() => {
+  useEffect(() => {
+    if (!originalWords || originalWords.length === 0) {
       onComplete();
-    }, [onComplete]);
+    }
+  }, [originalWords, onComplete]);
+
+  if (!originalWords || originalWords.length === 0) {
     return null;
   }
 
@@ -166,6 +169,7 @@ export default function WordMemoryRecall({
                 return (
                   <div key={index} className="relative">
                     <button
+                      type="button"
                       onClick={() => !showResults && toggleWordSelection(word)}
                       disabled={showResults}
                       className={cn(

@@ -86,7 +86,7 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
     if (!showStretchPrompt && isActive) {
       inputRef.current?.focus();
     }
-  }, [currentSentenceIndex, showStretchPrompt, isActive]);
+  }, [showStretchPrompt, isActive]);
 
   useEffect(() => {
     if (showStretchPrompt && stretchTimer > 0) {
@@ -115,9 +115,9 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
     }
     setErrors(newErrors);
 
-    if (value === currentSentence) {
+    if (value === currentSentence && startTime) {
       const endTime = Date.now();
-      const timeInMinutes = (endTime - startTime!) / 60000;
+      const timeInMinutes = (endTime - startTime) / 60000;
       // Standard WPM calculation uses 5 characters per word
       const standardWords = currentSentence.length / 5;
       // Use the higher of actual words or standard words
@@ -175,29 +175,27 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
         title="Typing Speed & Accuracy Drill"
         description="Improve your typing speed and accuracy by typing sentences as quickly and accurately as possible."
         instructions={
-          <>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-2">📝 How it works</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>You'll type 5 randomly selected sentences</li>
-                  <li>Type each sentence exactly as shown</li>
-                  <li>Your speed (WPM) and accuracy will be measured</li>
-                  <li>After each sentence, you'll get a stretch reminder</li>
-                </ul>
-              </div>
-
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-semibold mb-2">⌨️ Tips for Success</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>Focus on accuracy first, speed will follow</li>
-                  <li>Keep your fingers on the home row</li>
-                  <li>Look at the sentence, not your keyboard</li>
-                  <li>Take the stretch breaks seriously!</li>
-                </ul>
-              </div>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-semibold mb-2">📝 How it works</h4>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                <li>You'll type 5 randomly selected sentences</li>
+                <li>Type each sentence exactly as shown</li>
+                <li>Your speed (WPM) and accuracy will be measured</li>
+                <li>After each sentence, you'll get a stretch reminder</li>
+              </ul>
             </div>
-          </>
+
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-semibold mb-2">⌨️ Tips for Success</h4>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                <li>Focus on accuracy first, speed will follow</li>
+                <li>Keep your fingers on the home row</li>
+                <li>Look at the sentence, not your keyboard</li>
+                <li>Take the stretch breaks seriously!</li>
+              </ul>
+            </div>
+          </div>
         }
         onStart={handleStartFromDialog}
       />

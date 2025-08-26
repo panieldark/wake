@@ -31,7 +31,7 @@ declare global {
 
 export default function DualNBack({ onComplete }: DualNBackProps) {
   // Exact state variables from reference implementation
-  const [N, setN] = useState(2);
+  const [N, _setN] = useState(2);
   const [N_plus] = useState(20);
   const [iFrequency] = useState(4000);
   const [myInterval, setMyInterval] = useState<NodeJS.Timeout | null>(null);
@@ -40,8 +40,8 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   const [letter_stack, setLetter_stack] = useState<number[]>([]);
   const [vis_clicks, setVis_clicks] = useState<number[]>([]);
   const [letter_clicks, setLetter_clicks] = useState<number[]>([]);
-  const [vis_delays, setVis_delays] = useState<number[]>([]);
-  const [letter_delays, setLetter_delays] = useState<number[]>([]);
+  const [_vis_delays, setVis_delays] = useState<number[]>([]);
+  const [_letter_delays, setLetter_delays] = useState<number[]>([]);
   const [vis_wrong, setVis_wrong] = useState(0);
   const [vis_misses, setVis_misses] = useState(0);
   const [letter_wrong, setLetter_wrong] = useState(0);
@@ -110,18 +110,17 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   }, []);
 
   // Generate random numbers in a range (from reference)
-  const getRandomNumbers = (
-    start: number,
-    stop: number,
-    count: number,
-  ): number[] => {
-    const result: number[] = [];
-    for (let i = 0; i < count; i++) {
-      const randInt = Math.floor(Math.random() * (stop - start)) + start;
-      result.push(randInt);
-    }
-    return result;
-  };
+  const getRandomNumbers = useCallback(
+    (start: number, stop: number, count: number): number[] => {
+      const result: number[] = [];
+      for (let i = 0; i < count; i++) {
+        const randInt = Math.floor(Math.random() * (stop - start)) + start;
+        result.push(randInt);
+      }
+      return result;
+    },
+    [],
+  );
 
   // Build game sequence (exact copy from reference)
   const buildGameSequence = useCallback(() => {
@@ -190,14 +189,14 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     }
 
     return [visual_stack, auditory_stack];
-  }, [N, N_plus]);
+  }, [N, N_plus, getRandomNumbers]);
 
   // Play letter (from reference)
-  const playLetter = (idx: number) => {
+  const playLetter = useCallback((idx: number) => {
     if (spritesRef.current) {
       spritesRef.current.play(LETTERS[idx]);
     }
-  };
+  }, []);
 
   // Button press handlers (from reference)
   const eyeButtonPress = () => {
@@ -223,116 +222,124 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   };
 
   // Calculate score - pass stacks and clicks explicitly to avoid state sync issues
-  const calculateScore = useCallback((
-    visualStack: number[] = vis_stack, 
-    auditoryStack: number[] = letter_stack,
-    visualClicks: number[] = vis_clicks,
-    auditoryClicks: number[] = letter_clicks
-  ) => {
-    console.log("=== CALCULATE SCORE DEBUG ===");
-    console.log("N:", N);
-    console.log("vis_stack:", visualStack);
-    console.log("letter_stack:", auditoryStack);
-    console.log("vis_clicks:", visualClicks);
-    console.log("letter_clicks:", auditoryClicks);
+  const calculateScore = useCallback(
+    (
+      visualStack: number[] = vis_stack,
+      auditoryStack: number[] = letter_stack,
+      visualClicks: number[] = vis_clicks,
+      auditoryClicks: number[] = letter_clicks,
+    ) => {
+      console.log("=== CALCULATE SCORE DEBUG ===");
+      console.log("N:", N);
+      console.log("vis_stack:", visualStack);
+      console.log("letter_stack:", auditoryStack);
+      console.log("vis_clicks:", visualClicks);
+      console.log("letter_clicks:", auditoryClicks);
 
-    // Guard against empty stacks
-    if (visualStack.length === 0 || auditoryStack.length === 0) {
-      console.log("Empty stacks, skipping score calculation");
-      return;
-    }
+      // Guard against empty stacks
+      if (visualStack.length === 0 || auditoryStack.length === 0) {
+        console.log("Empty stacks, skipping score calculation");
+        return;
+      }
 
-    let vis_wrong_count = 0;
-    let vis_misses_count = 0;
-    let letter_wrong_count = 0;
-    let letter_misses_count = 0;
-    let vis_hits_count = 0;
-    let letter_hits_count = 0;
+      let vis_wrong_count = 0;
+      let vis_misses_count = 0;
+      let letter_wrong_count = 0;
+      let letter_misses_count = 0;
+      let vis_hits_count = 0;
+      let letter_hits_count = 0;
 
-    // EXACT logic from reference calculateScore() function
-    for (let i = N; i < visualStack.length; i++) {
-      if (visualStack[i] == visualStack[i - N]) {
-        if (visualClicks.indexOf(i) > -1) {
-          vis_hits_count += 1;
+      // EXACT logic from reference calculateScore() function
+      for (let i = N; i < visualStack.length; i++) {
+        if (visualStack[i] === visualStack[i - N]) {
+          if (visualClicks.indexOf(i) > -1) {
+            vis_hits_count += 1;
+          } else {
+            vis_misses_count += 1;
+          }
         } else {
-          vis_misses_count += 1;
+          if (visualClicks.indexOf(i) > -1) {
+            vis_wrong_count += 1;
+          }
         }
-      } else {
-        if (visualClicks.indexOf(i) > -1) {
-          vis_wrong_count += 1;
+        if (auditoryStack[i] === auditoryStack[i - N]) {
+          if (auditoryClicks.indexOf(i) > -1) {
+            letter_hits_count += 1;
+          } else {
+            letter_misses_count += 1;
+          }
+        } else {
+          if (auditoryClicks.indexOf(i) > -1) {
+            letter_wrong_count += 1;
+          }
         }
       }
-      if (auditoryStack[i] == auditoryStack[i - N]) {
-        if (auditoryClicks.indexOf(i) > -1) {
-          letter_hits_count += 1;
-        } else {
-          letter_misses_count += 1;
-        }
-      } else {
-        if (auditoryClicks.indexOf(i) > -1) {
-          letter_wrong_count += 1;
-        }
+
+      // EXACT calculation from reference - assumes 6 total matches (4 single + 2 double)
+      const hit_rate = (vis_hits_count / 6.0 + letter_hits_count / 6.0) / 2.0;
+      const false_alarm_rate =
+        (vis_wrong_count / (visualStack.length - 6) +
+          letter_wrong_count / (visualStack.length - 6)) /
+        2.0;
+      const d_prime_value = hit_rate - false_alarm_rate;
+
+      console.log("Reference calculation:");
+      console.log(
+        "  vis_hits:",
+        vis_hits_count,
+        "letter_hits:",
+        letter_hits_count,
+      );
+      console.log(
+        "  vis_wrong:",
+        vis_wrong_count,
+        "letter_wrong:",
+        letter_wrong_count,
+      );
+      console.log(
+        "  vis_misses:",
+        vis_misses_count,
+        "letter_misses:",
+        letter_misses_count,
+      );
+      console.log(
+        "  hit_rate:",
+        hit_rate,
+        "false_alarm_rate:",
+        false_alarm_rate,
+      );
+      console.log("  d_prime:", d_prime_value);
+
+      setVis_wrong(vis_wrong_count);
+      setVis_misses(vis_misses_count);
+      setLetter_wrong(letter_wrong_count);
+      setLetter_misses(letter_misses_count);
+      setVis_hits(vis_hits_count);
+      setLetter_hits(letter_hits_count);
+      setD_prime(d_prime_value);
+
+      // Only show feedback for real games, not demos
+      console.log(
+        "CALCULATE SCORE - setting states. demoMode:",
+        demoMode,
+        "demoComplete:",
+        demoComplete,
+      );
+      if (!demoMode && !demoComplete) {
+        setShowFeedback(true);
       }
-    }
-
-    // EXACT calculation from reference - assumes 6 total matches (4 single + 2 double)
-    const hit_rate = (vis_hits_count / 6.0 + letter_hits_count / 6.0) / 2.0;
-    const false_alarm_rate =
-      (vis_wrong_count / (visualStack.length - 6) +
-        letter_wrong_count / (visualStack.length - 6)) /
-      2.0;
-    const d_prime_value = hit_rate - false_alarm_rate;
-
-    console.log("Reference calculation:");
-    console.log(
-      "  vis_hits:",
-      vis_hits_count,
-      "letter_hits:",
-      letter_hits_count,
-    );
-    console.log(
-      "  vis_wrong:",
-      vis_wrong_count,
-      "letter_wrong:",
-      letter_wrong_count,
-    );
-    console.log(
-      "  vis_misses:",
-      vis_misses_count,
-      "letter_misses:",
-      letter_misses_count,
-    );
-    console.log("  hit_rate:", hit_rate, "false_alarm_rate:", false_alarm_rate);
-    console.log("  d_prime:", d_prime_value);
-
-    setVis_wrong(vis_wrong_count);
-    setVis_misses(vis_misses_count);
-    setLetter_wrong(letter_wrong_count);
-    setLetter_misses(letter_misses_count);
-    setVis_hits(vis_hits_count);
-    setLetter_hits(letter_hits_count);
-    setD_prime(d_prime_value);
-
-    // Only show feedback for real games, not demos
-    console.log(
-      "CALCULATE SCORE - setting states. demoMode:",
+      setGameActive(false);
+    },
+    [
+      N,
+      vis_stack,
+      letter_stack,
+      vis_clicks,
+      letter_clicks,
       demoMode,
-      "demoComplete:",
       demoComplete,
-    );
-    if (!demoMode && !demoComplete) {
-      setShowFeedback(true);
-    }
-    setGameActive(false);
-  }, [
-    N,
-    vis_stack,
-    letter_stack,
-    vis_clicks,
-    letter_clicks,
-    demoMode,
-    demoComplete,
-  ]);
+    ],
+  );
 
   // Start game function
   const startGame = useCallback(async () => {
@@ -544,7 +551,10 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
               setMyInterval(null);
               console.log("REGULAR GAME COMPLETED - showing score");
               // Use a timeout to ensure state has been updated
-              setTimeout(() => calculateScore(visual_stack, auditory_stack), 100);
+              setTimeout(
+                () => calculateScore(visual_stack, auditory_stack),
+                100,
+              );
             }
           };
 
@@ -564,6 +574,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     iFrequency,
     calculateScore,
     demoMode,
+    playLetter,
   ]);
 
   // Cleanup interval on unmount
@@ -937,7 +948,10 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                           setMyInterval(null);
                           // This is always a real game (not demo) since we're in the "I understand it now" flow
                           // Use a timeout to ensure state has been updated
-                          setTimeout(() => calculateScore(visual_stack, auditory_stack), 100);
+                          setTimeout(
+                            () => calculateScore(visual_stack, auditory_stack),
+                            100,
+                          );
                         }
                       };
 
@@ -959,7 +973,11 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
             {/* Grid container */}
             <div className="w-full max-w-xs aspect-square">
-              <svg viewBox="0 0 300 300" className="w-full h-full">
+              <svg
+                viewBox="0 0 300 300"
+                className="w-full h-full"
+                aria-label="Dual N-Back game grid"
+              >
                 {/* 8 boxes in 3x3 grid excluding center */}
                 {[0, 1, 2, 3, 4, 5, 6, 7].map((boxIndex) => {
                   const positions = [
@@ -1016,6 +1034,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
             {/* Game buttons - positioned below grid, not full width */}
             <div className="flex gap-3 w-full max-w-xs">
               <button
+                type="button"
                 onClick={demoMode ? undefined : eyeButtonPress}
                 className={cn(
                   "flex-1 h-12 rounded-lg font-medium transition-all duration-150 flex items-center justify-center gap-2 text-sm relative",
@@ -1039,6 +1058,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
               </button>
 
               <button
+                type="button"
                 onClick={demoMode ? undefined : soundButtonPress}
                 className={cn(
                   "flex-1 h-12 rounded-lg font-medium transition-all duration-150 flex items-center justify-center gap-2 text-sm relative",

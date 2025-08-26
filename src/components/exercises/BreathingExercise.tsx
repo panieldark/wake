@@ -204,38 +204,35 @@ export default function BreathingExercise({
         title="Box Breathing Exercise"
         description="A calming breathing technique to reduce stress and improve focus."
         instructions={
-          <>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-2">🫁 Box Breathing Pattern</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>Breathe IN for 4 seconds</li>
-                  <li>HOLD for 4 seconds</li>
-                  <li>Breathe OUT for 4 seconds</li>
-                  <li>HOLD for 4 seconds</li>
-                </ul>
-                <p className="text-sm mt-2">Repeat this cycle 4 times.</p>
-              </div>
-
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-semibold mb-2">🎯 Benefits</h4>
-                <ul className="text-sm space-y-1 list-disc list-inside">
-                  <li>Activates your parasympathetic nervous system</li>
-                  <li>Reduces stress and anxiety</li>
-                  <li>Improves concentration and mental clarity</li>
-                  <li>Helps transition into focused work</li>
-                </ul>
-              </div>
-
-              <div className="p-4 bg-amber-50 rounded-lg">
-                <p className="text-sm">
-                  <strong>Pro tip:</strong> Follow the on-screen visual cues.
-                  The circle will expand and contract to guide your breathing
-                  rhythm.
-                </p>
-              </div>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-semibold mb-2">🫁 Box Breathing Pattern</h4>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                <li>Breathe IN for 4 seconds</li>
+                <li>HOLD for 4 seconds</li>
+                <li>Breathe OUT for 4 seconds</li>
+                <li>HOLD for 4 seconds</li>
+              </ul>
+              <p className="text-sm mt-2">Repeat this cycle 4 times.</p>
             </div>
-          </>
+
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-semibold mb-2">🎯 Benefits</h4>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                <li>Activates your parasympathetic nervous system</li>
+                <li>Reduces stress and anxiety</li>
+                <li>Improves concentration and mental clarity</li>
+                <li>Helps transition into focused work</li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-amber-50 rounded-lg">
+              <p className="text-sm">
+                <strong>Pro tip:</strong> Follow the on-screen visual cues. The
+                circle will expand and contract to guide your breathing rhythm.
+              </p>
+            </div>
+          </div>
         }
         onStart={handleStartFromDialog}
       />

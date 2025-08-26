@@ -32,7 +32,7 @@ export default function MentalArithmetic({
   const generateProblem = useCallback(() => {
     const operations = ["+", "-", "*"];
     const operation = operations[Math.floor(Math.random() * operations.length)];
-    let a, b, answer;
+    let a: number, b: number, answer: number;
 
     switch (operation) {
       case "+":
@@ -71,13 +71,13 @@ export default function MentalArithmetic({
       setIsActive(false);
       setTimeout(onComplete, 3000);
     }
-  }, [correctCount, targetCorrect, showResults, onComplete]);
+  }, [correctCount, showResults, onComplete]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentProblem || !userAnswer) return;
 
-    const isCorrect = parseInt(userAnswer) === currentProblem.answer;
+    const isCorrect = parseInt(userAnswer, 10) === currentProblem.answer;
     setTotalAttempts(totalAttempts + 1);
 
     if (isCorrect) {
@@ -185,7 +185,6 @@ export default function MentalArithmetic({
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 className="w-32 px-4 py-3 text-2xl text-center font-mono border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                autoFocus
               />
             </div>
 
