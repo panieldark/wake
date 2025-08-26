@@ -436,7 +436,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
               currentTime += 1
             } else {
               clearInterval(gameIntervalId)
-              setMyInterval(0)
+              setMyInterval(null)
               console.log('REGULAR GAME COMPLETED - showing score')
               calculateScore()
             }
@@ -446,7 +446,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
           doTimestepInterval()
 
           // Then continue with the interval
-          gameIntervalId = setInterval(doTimestepInterval, iFrequency) as unknown as number
+          gameIntervalId = setInterval(doTimestepInterval, iFrequency)
           setMyInterval(gameIntervalId)
         }
       }, 1000) // 1 second countdown intervals
@@ -733,9 +733,9 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
             {demoMode && gameActive && (
               <Button
                 onClick={() => {
-                  if (myInterval > 0) {
+                  if (myInterval) {
                     clearInterval(myInterval)
-                    setMyInterval(0)
+                    setMyInterval(null)
                   }
                   setDemoMode(false)
                   setDemoAutoClick({ visual: false, auditory: false })
@@ -776,7 +776,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                           currentTime += 1
                         } else {
                           clearInterval(gameIntervalId)
-                          setMyInterval(0)
+                          setMyInterval(null)
                           // This is always a real game (not demo) since we're in the "I understand it now" flow
                           calculateScore()
                         }
