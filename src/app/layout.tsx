@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Wake - 5-minute cognitive warmup",
-  description: "Prime your mind, sharpen your focus, and activate your body in 5 minutes",
+  description:
+    "Prime your mind, sharpen your focus, and activate your body in 5 minutes",
 };
 
 export default function RootLayout({

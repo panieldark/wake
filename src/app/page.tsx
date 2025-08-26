@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import HomePage from '@/components/HomePage'
-import WakeFlow from '@/components/WakeFlow'
+import { useState } from "react";
+import HomePage from "@/components/HomePage";
+import WakeFlow from "@/components/WakeFlow";
 
 export default function Home() {
-  const [isStarted, setIsStarted] = useState(false)
+  const [isStarted, setIsStarted] = useState(false);
 
   return (
     <main className="min-h-screen">
@@ -15,5 +15,5 @@ export default function Home() {
         <WakeFlow onComplete={() => setIsStarted(false)} />
       )}
     </main>
-  )
+  );
 }

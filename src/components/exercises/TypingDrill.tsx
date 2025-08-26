@@ -1,14 +1,20 @@
-'use client'
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { RotateCcw } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { Button } from '../ui/button'
-import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
+import { RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "../ui/button";
+import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface TypingDrillProps {
-  onComplete: () => void
+  onComplete: () => void;
 }
 
 const sentences = [
@@ -42,117 +48,124 @@ const sentences = [
   "Mountain hiking builds endurance while offering scenic rewards",
   "Jazz music improvisation combines technical skill with artistic expression",
   "Garden cultivation teaches sustainability through seasonal cycles",
-  "Digital photography captures moments with precision and artistry"
-]
+  "Digital photography captures moments with precision and artistry",
+];
 
 export default function TypingDrill({ onComplete }: TypingDrillProps) {
   const [selectedSentences] = useState(() => {
     // Randomly select and shuffle 5 sentences from the pool
-    const shuffled = [...sentences].sort(() => Math.random() - 0.5)
-    return shuffled.slice(0, 5)
-  })
-  const [currentSentenceIndex, setSentenceIndex] = useState(0)
-  const [userInput, setUserInput] = useState('')
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [wpm, setWpm] = useState<number | null>(null)
-  const [accuracy, setAccuracy] = useState<number | null>(null)
-  const [errors, setErrors] = useState<number[]>([])
-  const [showStretchPrompt, setShowStretchPrompt] = useState(false)
-  const [stretchTimer, setStretchTimer] = useState(10)
-  const [showDialog, setShowDialog] = useState(true)
-  const [isActive, setIsActive] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+    const shuffled = [...sentences].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 5);
+  });
+  const [currentSentenceIndex, setSentenceIndex] = useState(0);
+  const [userInput, setUserInput] = useState("");
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [wpm, setWpm] = useState<number | null>(null);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [errors, setErrors] = useState<number[]>([]);
+  const [showStretchPrompt, setShowStretchPrompt] = useState(false);
+  const [stretchTimer, setStretchTimer] = useState(10);
+  const [showDialog, setShowDialog] = useState(true);
+  const [isActive, setIsActive] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const currentSentence = selectedSentences[currentSentenceIndex]
+  const currentSentence = selectedSentences[currentSentenceIndex];
 
   const stretchPrompts = [
     "Stretch your wrists",
     "Stretch your hands",
     "Stretch your fingers",
     "Stretch your neck",
-    "Fix your posture"
-  ]
+    "Fix your posture",
+  ];
 
-  const currentStretch = stretchPrompts[currentSentenceIndex % stretchPrompts.length]
+  const currentStretch =
+    stretchPrompts[currentSentenceIndex % stretchPrompts.length];
 
   useEffect(() => {
     if (!showStretchPrompt && isActive) {
-      inputRef.current?.focus()
+      inputRef.current?.focus();
     }
-  }, [currentSentenceIndex, showStretchPrompt, isActive])
+  }, [currentSentenceIndex, showStretchPrompt, isActive]);
 
   useEffect(() => {
     if (showStretchPrompt && stretchTimer > 0) {
-      const timer = setTimeout(() => setStretchTimer(stretchTimer - 1), 1000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setStretchTimer(stretchTimer - 1), 1000);
+      return () => clearTimeout(timer);
     } else if (showStretchPrompt && stretchTimer === 0) {
-      setShowStretchPrompt(false)
-      setStretchTimer(10)
-      setWpm(null)
-      setAccuracy(null)
+      setShowStretchPrompt(false);
+      setStretchTimer(10);
+      setWpm(null);
+      setAccuracy(null);
     }
-  }, [showStretchPrompt, stretchTimer])
+  }, [showStretchPrompt, stretchTimer]);
 
   const handleInputChange = (value: string) => {
     if (!startTime && value.length === 1) {
-      setStartTime(Date.now())
+      setStartTime(Date.now());
     }
 
-    setUserInput(value)
+    setUserInput(value);
 
-    const newErrors: number[] = []
+    const newErrors: number[] = [];
     for (let i = 0; i < value.length; i++) {
       if (value[i] !== currentSentence[i]) {
-        newErrors.push(i)
+        newErrors.push(i);
       }
     }
-    setErrors(newErrors)
+    setErrors(newErrors);
 
     if (value === currentSentence) {
-      const endTime = Date.now()
-      const timeInMinutes = (endTime - startTime!) / 60000
+      const endTime = Date.now();
+      const timeInMinutes = (endTime - startTime!) / 60000;
       // Standard WPM calculation uses 5 characters per word
-      const standardWords = currentSentence.length / 5
+      const standardWords = currentSentence.length / 5;
       // Use the higher of actual words or standard words
-      const wordsTyped = Math.max(currentSentence.split(' ').length, standardWords)
-      const calculatedWpm = Math.ceil(wordsTyped / timeInMinutes) // Round up
-      const calculatedAccuracy = Math.round(((currentSentence.length - errors.length) / currentSentence.length) * 100)
+      const wordsTyped = Math.max(
+        currentSentence.split(" ").length,
+        standardWords,
+      );
+      const calculatedWpm = Math.ceil(wordsTyped / timeInMinutes); // Round up
+      const calculatedAccuracy = Math.round(
+        ((currentSentence.length - errors.length) / currentSentence.length) *
+          100,
+      );
 
-      setWpm(calculatedWpm)
-      setAccuracy(calculatedAccuracy)
+      setWpm(calculatedWpm);
+      setAccuracy(calculatedAccuracy);
 
       if (currentSentenceIndex < selectedSentences.length - 1) {
         // Show stretch prompt immediately, no delay
-        setShowStretchPrompt(true)
-        setStretchTimer(10)
-        setSentenceIndex(currentSentenceIndex + 1)
-        setUserInput('')
-        setStartTime(null)
-        setErrors([])
+        setShowStretchPrompt(true);
+        setStretchTimer(10);
+        setSentenceIndex(currentSentenceIndex + 1);
+        setUserInput("");
+        setStartTime(null);
+        setErrors([]);
         // Don't reset WPM and accuracy - keep them for display during stretch
       } else {
-        setTimeout(onComplete, 2000)
+        setTimeout(onComplete, 2000);
       }
     }
-  }
+  };
 
   const handleStartFromDialog = () => {
-    setShowDialog(false)
-    setIsActive(true)
-  }
+    setShowDialog(false);
+    setIsActive(true);
+  };
 
   const handleRestart = () => {
-    setSentenceIndex(0)
-    setUserInput('')
-    setStartTime(null)
-    setWpm(null)
-    setAccuracy(null)
-    setErrors([])
-    setShowStretchPrompt(false)
-    setStretchTimer(10)
-    setIsActive(false)
-    setShowDialog(true)
-  }
+    setSentenceIndex(0);
+    setUserInput("");
+    setStartTime(null);
+    setWpm(null);
+    setAccuracy(null);
+    setErrors([]);
+    setShowStretchPrompt(false);
+    setStretchTimer(10);
+    setIsActive(false);
+    setShowDialog(true);
+  };
 
   return (
     <>
@@ -201,15 +214,14 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
         <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
           <Card className="animate-slide-up">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">
-                {currentStretch}
-              </CardTitle>
+              <CardTitle className="text-2xl">{currentStretch}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 text-center">
-
               <div className="space-y-2">
                 <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-700">{stretchTimer}</span>
+                  <span className="text-2xl font-bold text-gray-700">
+                    {stretchTimer}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-500">
                   Next sentence starts in {stretchTimer} seconds
@@ -218,14 +230,18 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
 
               {wpm && accuracy && (
                 <div className="py-4 space-y-2 border-t">
-                  <p className="text-sm text-gray-600 mb-2">Previous sentence results:</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Previous sentence results:
+                  </p>
                   <div className="flex justify-center gap-8">
                     <div>
                       <p className="text-2xl font-bold text-gray-900">{wpm}</p>
                       <p className="text-sm text-gray-600">WPM</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-900">{accuracy}%</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {accuracy}%
+                      </p>
                       <p className="text-sm text-gray-600">Accuracy</p>
                     </div>
                   </div>
@@ -234,10 +250,10 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
 
               <Button
                 onClick={() => {
-                  setShowStretchPrompt(false)
-                  setStretchTimer(10)
-                  setWpm(null)
-                  setAccuracy(null)
+                  setShowStretchPrompt(false);
+                  setStretchTimer(10);
+                  setWpm(null);
+                  setAccuracy(null);
                 }}
                 variant="secondary"
               >
@@ -252,21 +268,22 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
             <CardHeader className="text-center">
               <CardTitle>Type the sentence</CardTitle>
               <CardDescription>
-                Sentence {currentSentenceIndex + 1} of {selectedSentences.length}
+                Sentence {currentSentenceIndex + 1} of{" "}
+                {selectedSentences.length}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="p-6 bg-gray-50 rounded-lg">
                 <div className="text-xl leading-relaxed font-mono">
-                  {currentSentence.split('').map((char, index) => (
+                  {currentSentence.split("").map((char, index) => (
                     <span
                       key={index}
                       className={
                         index < userInput.length
                           ? errors.includes(index)
-                            ? 'bg-red-200 text-red-900'
-                            : 'bg-green-100 text-green-900'
-                          : 'text-gray-700'
+                            ? "bg-red-200 text-red-900"
+                            : "bg-green-100 text-green-900"
+                          : "text-gray-700"
                       }
                     >
                       {char}
@@ -296,7 +313,9 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
                       <p className="text-sm text-gray-600">WPM</p>
                     </div>
                     <div>
-                      <p className="text-3xl font-bold text-gray-900">{accuracy}%</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {accuracy}%
+                      </p>
                       <p className="text-sm text-gray-600">Accuracy</p>
                     </div>
                   </div>
@@ -317,5 +336,5 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
         Restart Exercise
       </Button>
     </>
-  )
+  );
 }

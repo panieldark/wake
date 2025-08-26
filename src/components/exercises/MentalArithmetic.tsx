@@ -1,112 +1,123 @@
-'use client'
+"use client";
 
-import { Button } from '@/components/ui/button'
-import { RotateCcw } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
+import { RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface MentalArithmeticProps {
-  onComplete: () => void
+  onComplete: () => void;
 }
 
-export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) {
-  const [currentProblem, setCurrentProblem] = useState<{ question: string; answer: number } | null>(null)
-  const [userAnswer, setUserAnswer] = useState('')
-  const [correctCount, setCorrectCount] = useState(0)
-  const [totalAttempts, setTotalAttempts] = useState(0)
-  const [feedback, setFeedback] = useState<{ message: string; isCorrect: boolean } | null>(null)
-  const [isActive, setIsActive] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [showDialog, setShowDialog] = useState(true)
-  const targetCorrect = 5
-  const inputRef = useRef<HTMLInputElement>(null)
+export default function MentalArithmetic({
+  onComplete,
+}: MentalArithmeticProps) {
+  const [currentProblem, setCurrentProblem] = useState<{
+    question: string;
+    answer: number;
+  } | null>(null);
+  const [userAnswer, setUserAnswer] = useState("");
+  const [correctCount, setCorrectCount] = useState(0);
+  const [totalAttempts, setTotalAttempts] = useState(0);
+  const [feedback, setFeedback] = useState<{
+    message: string;
+    isCorrect: boolean;
+  } | null>(null);
+  const [isActive, setIsActive] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [showDialog, setShowDialog] = useState(true);
+  const targetCorrect = 5;
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const generateProblem = useCallback(() => {
-    const operations = ['+', '-', '*']
-    const operation = operations[Math.floor(Math.random() * operations.length)]
-    let a, b, answer
+    const operations = ["+", "-", "*"];
+    const operation = operations[Math.floor(Math.random() * operations.length)];
+    let a, b, answer;
 
     switch (operation) {
-      case '+':
-        a = Math.floor(Math.random() * 50) + 10
-        b = Math.floor(Math.random() * 50) + 10
-        answer = a + b
-        break
-      case '-':
-        a = Math.floor(Math.random() * 50) + 30
-        b = Math.floor(Math.random() * 30) + 10
-        answer = a - b
-        break
-      case '*':
-        a = Math.floor(Math.random() * 12) + 2
-        b = Math.floor(Math.random() * 12) + 2
-        answer = a * b
-        break
+      case "+":
+        a = Math.floor(Math.random() * 50) + 10;
+        b = Math.floor(Math.random() * 50) + 10;
+        answer = a + b;
+        break;
+      case "-":
+        a = Math.floor(Math.random() * 50) + 30;
+        b = Math.floor(Math.random() * 30) + 10;
+        answer = a - b;
+        break;
+      case "*":
+        a = Math.floor(Math.random() * 12) + 2;
+        b = Math.floor(Math.random() * 12) + 2;
+        answer = a * b;
+        break;
       default:
-        a = 0
-        b = 0
-        answer = 0
+        a = 0;
+        b = 0;
+        answer = 0;
     }
 
-    return { question: `${a} ${operation} ${b}`, answer }
-  }, [])
+    return { question: `${a} ${operation} ${b}`, answer };
+  }, []);
 
   useEffect(() => {
     if (isActive && !currentProblem) {
-      setCurrentProblem(generateProblem())
+      setCurrentProblem(generateProblem());
     }
-  }, [isActive, currentProblem, generateProblem])
+  }, [isActive, currentProblem, generateProblem]);
 
   useEffect(() => {
     if (correctCount >= targetCorrect && !showResults) {
-      setShowResults(true)
-      setIsActive(false)
-      setTimeout(onComplete, 3000)
+      setShowResults(true);
+      setIsActive(false);
+      setTimeout(onComplete, 3000);
     }
-  }, [correctCount, targetCorrect, showResults, onComplete])
+  }, [correctCount, targetCorrect, showResults, onComplete]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!currentProblem || !userAnswer) return
+    e.preventDefault();
+    if (!currentProblem || !userAnswer) return;
 
-    const isCorrect = parseInt(userAnswer) === currentProblem.answer
-    setTotalAttempts(totalAttempts + 1)
+    const isCorrect = parseInt(userAnswer) === currentProblem.answer;
+    setTotalAttempts(totalAttempts + 1);
 
     if (isCorrect) {
-      setCorrectCount(correctCount + 1)
-      setFeedback({ message: 'Correct!', isCorrect: true })
+      setCorrectCount(correctCount + 1);
+      setFeedback({ message: "Correct!", isCorrect: true });
     } else {
-      setFeedback({ message: `Incorrect. The answer was ${currentProblem.answer}`, isCorrect: false })
+      setFeedback({
+        message: `Incorrect. The answer was ${currentProblem.answer}`,
+        isCorrect: false,
+      });
     }
 
-    setUserAnswer('')
-    
+    setUserAnswer("");
+
     // Generate new problem after a delay to show feedback
     setTimeout(() => {
-      setFeedback(null)
+      setFeedback(null);
       if (correctCount + (isCorrect ? 1 : 0) < targetCorrect) {
-        setCurrentProblem(generateProblem())
+        setCurrentProblem(generateProblem());
       }
       // Refocus input after feedback clears
-      setTimeout(() => inputRef.current?.focus(), 50)
-    }, 1000)
-  }
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }, 1000);
+  };
 
   const handleStartFromDialog = () => {
-    setShowDialog(false)
-    setIsActive(true)
-  }
+    setShowDialog(false);
+    setIsActive(true);
+  };
 
   const handleRestart = () => {
-    setCurrentProblem(null)
-    setUserAnswer('')
-    setCorrectCount(0)
-    setTotalAttempts(0)
-    setFeedback(null)
-    setIsActive(false)
-    setShowResults(false)
-    setShowDialog(true)
-  }
+    setCurrentProblem(null);
+    setUserAnswer("");
+    setCorrectCount(0);
+    setTotalAttempts(0);
+    setFeedback(null);
+    setIsActive(false);
+    setShowResults(false);
+    setShowDialog(true);
+  };
 
   return (
     <>
@@ -126,16 +137,14 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
           animation: fade-in 0.3s ease-out;
         }
       `}</style>
-      
+
       <ExerciseInstructionDialog
         open={showDialog}
         onOpenChange={setShowDialog}
         title="Mental Arithmetic"
         description="Solve 5 math problems correctly"
         instructions={
-          <p className="text-center">
-            Type your answer and press Enter
-          </p>
+          <p className="text-center">Type your answer and press Enter</p>
         }
         onStart={handleStartFromDialog}
       />
@@ -153,9 +162,11 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
       ) : isActive ? (
         <div className="max-w-2xl mx-auto px-8 py-16 space-y-8">
           <div className="text-center space-y-2">
-            <p className="text-lg text-gray-600">Progress: {correctCount} / {targetCorrect} correct</p>
+            <p className="text-lg text-gray-600">
+              Progress: {correctCount} / {targetCorrect} correct
+            </p>
             <div className="w-full max-w-xs mx-auto bg-gray-200 rounded-full h-2 mt-2">
-              <div 
+              <div
                 className="bg-green-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${(correctCount / targetCorrect) * 100}%` }}
               />
@@ -187,9 +198,13 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
           </form>
 
           {feedback && (
-            <div className={`text-center p-4 rounded-lg animate-fade-in ${
-              feedback.isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
+            <div
+              className={`text-center p-4 rounded-lg animate-fade-in ${
+                feedback.isCorrect
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
               <p className="font-semibold">{feedback.message}</p>
             </div>
           )}
@@ -206,5 +221,5 @@ export default function MentalArithmetic({ onComplete }: MentalArithmeticProps) 
         Restart Exercise
       </Button>
     </>
-  )
+  );
 }

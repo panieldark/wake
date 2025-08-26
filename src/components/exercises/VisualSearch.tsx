@@ -1,37 +1,43 @@
-'use client'
+"use client";
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { RotateCcw } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
-import { ExerciseInstructionDialog } from './ExerciseInstructionDialog'
+import { RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface VisualSearchProps {
-  onComplete: () => void
+  onComplete: () => void;
 }
 
 type Shape = {
-  name: string
-}
+  name: string;
+};
 
 type Cell = {
-  shape: Shape
-  filled: boolean
-  rotation: number
-} | null
+  shape: Shape;
+  filled: boolean;
+  rotation: number;
+} | null;
 
-type Grid = Cell[]
+type Grid = Cell[];
 
 export default function VisualSearch({ onComplete }: VisualSearchProps) {
-  const [grid1, setGrid1] = useState<Grid>([])
-  const [grid2, setGrid2] = useState<Grid>([])
-  const [gameStarted, setGameStarted] = useState(false)
-  const [currentRound, setCurrentRound] = useState(1)
-  const [level, setLevel] = useState(3)
-  const [score, setScore] = useState(0)
-  const [showDialog, setShowDialog] = useState(true)
-  const maxLevel = 20 // Increased max level for more tokens
-  const totalRounds = 12 // 12 rounds total
+  const [grid1, setGrid1] = useState<Grid>([]);
+  const [grid2, setGrid2] = useState<Grid>([]);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [level, setLevel] = useState(3);
+  const [score, setScore] = useState(0);
+  const [showDialog, setShowDialog] = useState(true);
+  const maxLevel = 20; // Increased max level for more tokens
+  const totalRounds = 12; // 12 rounds total
 
   const shapes = [
     { name: "circle" },
@@ -39,121 +45,122 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
     { name: "triangle" },
     { name: "diamond" },
     { name: "cross" },
-  ]
+  ];
 
   const playSuccessSound = () => {
-    const audio = new Audio('/sounds/ding.mp3')
-    audio.volume = 0.5
-    audio.play().catch(console.error)
-  }
+    const audio = new Audio("/sounds/ding.mp3");
+    audio.volume = 0.5;
+    audio.play().catch(console.error);
+  };
 
   const playErrorSound = () => {
-    const audio = new Audio('/sounds/error.mp3')
-    audio.volume = 0.5
-    audio.play().catch(console.error)
-  }
+    const audio = new Audio("/sounds/error.mp3");
+    audio.volume = 0.5;
+    audio.play().catch(console.error);
+  };
 
   const generateGrid = useCallback((): Grid => {
-    const newGrid: Grid = Array(25).fill(null) // 5x5 grid = 25 cells
-    const positions = [...Array(25).keys()]
+    const newGrid: Grid = Array(25).fill(null); // 5x5 grid = 25 cells
+    const positions = [...Array(25).keys()];
 
     // Place shapes based on current level
     for (let i = 0; i < level; i++) {
-      const randomIndex = Math.floor(Math.random() * positions.length)
-      const position = positions.splice(randomIndex, 1)[0]
+      const randomIndex = Math.floor(Math.random() * positions.length);
+      const position = positions.splice(randomIndex, 1)[0];
       newGrid[position] = {
         shape: shapes[Math.floor(Math.random() * shapes.length)],
         filled: Math.random() > 0.5,
-        rotation: 0
-      }
+        rotation: 0,
+      };
     }
 
-    return newGrid
-  }, [level])
+    return newGrid;
+  }, [level]);
 
   const newRound = useCallback(() => {
-    const newGrid1 = generateGrid()
-    let newGrid2 = [...newGrid1]
+    const newGrid1 = generateGrid();
+    const newGrid2 = [...newGrid1];
 
     // Decide if the grids should match or not, randomly
     if (Math.random() >= 0.5) {
       // Choose a random non-null cell to modify
       const filledPositions = newGrid1.reduce<number[]>(
         (acc, cell, index) => (cell ? [...acc, index] : acc),
-        []
-      )
+        [],
+      );
 
       if (filledPositions.length > 0) {
-        const randomIndex = filledPositions[Math.floor(Math.random() * filledPositions.length)]
+        const randomIndex =
+          filledPositions[Math.floor(Math.random() * filledPositions.length)];
         if (newGrid2[randomIndex]) {
           newGrid2[randomIndex] = {
             ...newGrid2[randomIndex]!,
             filled: !newGrid2[randomIndex]!.filled,
-            rotation: Math.floor(Math.random() * 4) * 90 // Random rotation: 0, 90, 180, or 270 degrees
-          }
+            rotation: Math.floor(Math.random() * 4) * 90, // Random rotation: 0, 90, 180, or 270 degrees
+          };
         }
       }
     }
 
-    setGrid1(newGrid1)
-    setGrid2(newGrid2)
-  }, [generateGrid])
+    setGrid1(newGrid1);
+    setGrid2(newGrid2);
+  }, [generateGrid]);
 
   const checkMatch = (isMatch: boolean) => {
-    if (!gameStarted) return
+    if (!gameStarted) return;
 
     // Check if grids actually match (using JSON comparison like the Svelte version)
-    const actualMatch = JSON.stringify(grid1) !== JSON.stringify(grid2)
+    const actualMatch = JSON.stringify(grid1) !== JSON.stringify(grid2);
 
     if ((isMatch && !actualMatch) || (!isMatch && actualMatch)) {
       // Was correct
-      playSuccessSound()
-      setScore(score + 1)
+      playSuccessSound();
+      setScore(score + 1);
 
       if (currentRound < totalRounds) {
-        setCurrentRound(currentRound + 1)
-        setLevel(Math.min(level + 1, maxLevel)) // Increase difficulty each round
+        setCurrentRound(currentRound + 1);
+        setLevel(Math.min(level + 1, maxLevel)); // Increase difficulty each round
       } else {
         // All rounds completed!
-        setGameStarted(false)
-        setTimeout(onComplete, 500)
-        return
+        setGameStarted(false);
+        setTimeout(onComplete, 500);
+        return;
       }
     } else {
       // Was wrong
-      playErrorSound()
-      setScore(Math.max(0, score - 1))
+      playErrorSound();
+      setScore(Math.max(0, score - 1));
     }
 
     // Always generate new round after a short delay
     setTimeout(() => {
-      newRound()
-    }, 100)
-  }
+      newRound();
+    }, 100);
+  };
 
   const startGame = () => {
-    setGameStarted(true)
-    setCurrentRound(1)
-    setLevel(3)
-    setScore(0)
-    newRound()
-  }
+    setGameStarted(true);
+    setCurrentRound(1);
+    setLevel(3);
+    setScore(0);
+    newRound();
+  };
 
   useEffect(() => {
-    startGame()
-  }, [])
+    startGame();
+  }, []);
 
   const renderShape = (cell: Cell) => {
-    if (!cell) return null
+    if (!cell) return null;
 
     // Smaller tokens - scale down as level increases for more challenge
-    const size = Math.max(24, 36 - Math.floor(level / 3)) // Starts at 36px, goes down to 24px
-    const color = "#1f2937" // Dark gray for a more professional look
-    const fill = cell.filled ? color : "transparent"
-    const style = { transform: `rotate(${cell.rotation}deg)` }
+    const size = Math.max(24, 36 - Math.floor(level / 3)); // Starts at 36px, goes down to 24px
+    const color = "#1f2937"; // Dark gray for a more professional look
+    const fill = cell.filled ? color : "transparent";
+    const style = { transform: `rotate(${cell.rotation}deg)` };
 
     switch (cell.shape.name) {
-      case 'circle':
+      case "circle":
         return (
           <div
             className="rounded-full border-2 shadow-sm"
@@ -162,12 +169,12 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
               height: `${size}px`,
               borderColor: color,
               backgroundColor: fill,
-              borderWidth: '2px',
-              ...style
+              borderWidth: "2px",
+              ...style,
             }}
           />
-        )
-      case 'square':
+        );
+      case "square":
         return (
           <div
             className="border-2 shadow-sm"
@@ -176,12 +183,12 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
               height: `${size}px`,
               borderColor: color,
               backgroundColor: fill,
-              borderWidth: '2px',
-              ...style
+              borderWidth: "2px",
+              ...style,
             }}
           />
-        )
-      case 'triangle':
+        );
+      case "triangle":
         return (
           <div style={style}>
             <div
@@ -190,21 +197,23 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 height: 0,
                 borderLeft: `${size / 2}px solid transparent`,
                 borderRight: `${size / 2}px solid transparent`,
-                borderBottom: `${size}px solid ${cell.filled ? color : 'transparent'}`,
-                ...(cell.filled ? {} : {
-                  borderBottomColor: 'transparent',
-                  borderBottomWidth: `${size - 4}px`,
-                  borderLeftWidth: `${size / 2 - 2}px`,
-                  borderRightWidth: `${size / 2 - 2}px`,
-                  borderBottom: `${size - 4}px solid transparent`,
-                  outline: `2px solid ${color}`,
-                  outlineOffset: '-2px'
-                })
+                borderBottom: `${size}px solid ${cell.filled ? color : "transparent"}`,
+                ...(cell.filled
+                  ? {}
+                  : {
+                      borderBottomColor: "transparent",
+                      borderBottomWidth: `${size - 4}px`,
+                      borderLeftWidth: `${size / 2 - 2}px`,
+                      borderRightWidth: `${size / 2 - 2}px`,
+                      borderBottom: `${size - 4}px solid transparent`,
+                      outline: `2px solid ${color}`,
+                      outlineOffset: "-2px",
+                    }),
               }}
             />
           </div>
-        )
-      case 'diamond':
+        );
+      case "diamond":
         return (
           <div
             className="border-2 shadow-sm"
@@ -213,23 +222,26 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
               height: `${size * 0.7}px`,
               borderColor: color,
               backgroundColor: fill,
-              borderWidth: '2px',
+              borderWidth: "2px",
               transform: `${style.transform} rotate(45deg)`,
             }}
           />
-        )
-      case 'cross':
+        );
+      case "cross":
         return (
           <div style={style}>
-            <div className="relative" style={{ width: `${size}px`, height: `${size}px` }}>
+            <div
+              className="relative"
+              style={{ width: `${size}px`, height: `${size}px` }}
+            >
               <div
                 className="absolute"
                 style={{
                   width: `${size}px`,
                   height: `${size / 4}px`,
-                  top: `${size * 3 / 8}px`,
-                  backgroundColor: cell.filled ? color : 'transparent',
-                  border: cell.filled ? 'none' : `2px solid ${color}`
+                  top: `${(size * 3) / 8}px`,
+                  backgroundColor: cell.filled ? color : "transparent",
+                  border: cell.filled ? "none" : `2px solid ${color}`,
                 }}
               />
               <div
@@ -237,32 +249,32 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 style={{
                   width: `${size / 4}px`,
                   height: `${size}px`,
-                  left: `${size * 3 / 8}px`,
-                  backgroundColor: cell.filled ? color : 'transparent',
-                  border: cell.filled ? 'none' : `2px solid ${color}`
+                  left: `${(size * 3) / 8}px`,
+                  backgroundColor: cell.filled ? color : "transparent",
+                  border: cell.filled ? "none" : `2px solid ${color}`,
                 }}
               />
             </div>
           </div>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const handleStartFromDialog = () => {
-    setShowDialog(false)
-  }
+    setShowDialog(false);
+  };
 
   const handleRestart = () => {
-    setGrid1([])
-    setGrid2([])
-    setGameStarted(false)
-    setCurrentRound(1)
-    setLevel(3)
-    setScore(0)
-    setShowDialog(true)
-  }
+    setGrid1([]);
+    setGrid2([]);
+    setGameStarted(false);
+    setCurrentRound(1);
+    setLevel(3);
+    setScore(0);
+    setShowDialog(true);
+  };
 
   return (
     <>
@@ -289,7 +301,10 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 <h4 className="font-semibold mb-2">🎯 Strategy Tips</h4>
                 <ul className="text-sm space-y-1 list-disc list-inside">
                   <li>Scan systematically - don't jump randomly</li>
-                  <li>Check one feature at a time (shape, then fill, then rotation)</li>
+                  <li>
+                    Check one feature at a time (shape, then fill, then
+                    rotation)
+                  </li>
                   <li>Ignore empty cells - focus on shapes only</li>
                   <li>Speed matters, but accuracy is key</li>
                 </ul>
@@ -318,7 +333,8 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
             <CardHeader className="text-center">
               <CardTitle>Feature Match</CardTitle>
               <CardDescription>
-                Round {currentRound} of {totalRounds} • Level {level} • Score {score}
+                Round {currentRound} of {totalRounds} • Level {level} • Score{" "}
+                {score}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -326,7 +342,10 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 {/* Grid 1 */}
                 <div className="grid grid-cols-5 gap-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   {grid1.map((cell, index) => (
-                    <div key={`grid1-${index}`} className="w-12 h-12 flex items-center justify-center">
+                    <div
+                      key={`grid1-${index}`}
+                      className="w-12 h-12 flex items-center justify-center"
+                    >
                       {renderShape(cell)}
                     </div>
                   ))}
@@ -335,7 +354,10 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 {/* Grid 2 */}
                 <div className="grid grid-cols-5 gap-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   {grid2.map((cell, index) => (
-                    <div key={`grid2-${index}`} className="w-12 h-12 flex items-center justify-center">
+                    <div
+                      key={`grid2-${index}`}
+                      className="w-12 h-12 flex items-center justify-center"
+                    >
                       {renderShape(cell)}
                     </div>
                   ))}
@@ -375,5 +397,5 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
         Restart Exercise
       </Button>
     </>
-  )
+  );
 }
