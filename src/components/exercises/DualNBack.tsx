@@ -1,10 +1,10 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface DualNBackProps {
@@ -70,8 +70,22 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   // Box flash state
   const [flashingBox, setFlashingBox] = useState(-1);
 
+  // Turn feedback state
+  const [turnFeedback, setTurnFeedback] = useState<{
+    visual: { correct: boolean; shouldHave: boolean; pressed: boolean } | null;
+    auditory: { correct: boolean; shouldHave: boolean; pressed: boolean } | null;
+    turn: number;
+  } | null>(null);
+  const [feedbackEnabled, setFeedbackEnabled] = useState(true);
+
   // Audio sprites reference
   const spritesRef = useRef<HowlSprite | null>(null);
+
+  // Track countdown interval reference
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Track button presses for current turn
+  const currentTurnPresses = useRef<{ visual: boolean; auditory: boolean }>({ visual: false, auditory: false });
 
   // Initialize audio sprites (equivalent to primeAudioEngine from reference)
   const initializeAudio = useCallback(() => {
@@ -198,6 +212,41 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     }
   }, []);
 
+  // Evaluate turn feedback
+  const evaluateTurn = useCallback((
+    currentTime: number,
+    visualStack: number[],
+    auditoryStack: number[],
+    visualPressed: boolean,
+    auditoryPressed: boolean
+  ) => {
+    if (currentTime < N) {
+      // No feedback for first N turns
+      setTurnFeedback(null);
+      return;
+    }
+
+    const visualMatch = visualStack[currentTime] === visualStack[currentTime - N];
+    const auditoryMatch = auditoryStack[currentTime] === auditoryStack[currentTime - N];
+
+    const visualCorrect = visualPressed === visualMatch;
+    const auditoryCorrect = auditoryPressed === auditoryMatch;
+
+    console.log(`=== TURN ${currentTime} FEEDBACK ===`);
+    console.log(`Visual: pos ${visualStack[currentTime]} vs N-back pos ${visualStack[currentTime - N]} = ${visualMatch ? 'MATCH' : 'NO MATCH'}`);
+    console.log(`Visual button pressed: ${visualPressed}, should have pressed: ${visualMatch}, correct: ${visualCorrect}`);
+    console.log(`Auditory: ${LETTERS[auditoryStack[currentTime]]} vs N-back ${LETTERS[auditoryStack[currentTime - N]]} = ${auditoryMatch ? 'MATCH' : 'NO MATCH'}`);
+    console.log(`Auditory button pressed: ${auditoryPressed}, should have pressed: ${auditoryMatch}, correct: ${auditoryCorrect}`);
+
+    setTurnFeedback({
+      visual: { correct: visualCorrect, shouldHave: visualMatch, pressed: visualPressed },
+      auditory: { correct: auditoryCorrect, shouldHave: auditoryMatch, pressed: auditoryPressed },
+      turn: currentTime
+    });
+
+    // Keep feedback visible (don't clear automatically)
+  }, [N]);
+
   // Button press handlers (from reference)
   const eyeButtonPress = () => {
     const delay = Date.now() - timestep_start;
@@ -207,6 +256,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
       return [...prev, time];
     });
     setVisButtonPressed(true);
+    currentTurnPresses.current.visual = true;
     // Keep button pressed until next timestep (will be reset in doTimestepInterval)
   };
 
@@ -218,6 +268,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
       return [...prev, time];
     });
     setLetterButtonPressed(true);
+    currentTurnPresses.current.auditory = true;
     // Keep button pressed until next timestep (will be reset in doTimestepInterval)
   };
 
@@ -231,15 +282,24 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     ) => {
       console.log("=== CALCULATE SCORE DEBUG ===");
       console.log("N:", N);
-      console.log("vis_stack:", visualStack);
-      console.log("letter_stack:", auditoryStack);
-      console.log("vis_clicks:", visualClicks);
-      console.log("letter_clicks:", auditoryClicks);
+      console.log("vis_stack (param):", visualStack);
+      console.log("letter_stack (param):", auditoryStack);
+      console.log("vis_clicks (param):", visualClicks);
+      console.log("letter_clicks (param):", auditoryClicks);
+      console.log("vis_stack (state):", vis_stack);
+      console.log("letter_stack (state):", letter_stack);
+      console.log("vis_clicks (state):", vis_clicks);
+      console.log("letter_clicks (state):", letter_clicks);
 
       // Guard against empty stacks
       if (visualStack.length === 0 || auditoryStack.length === 0) {
         console.log("Empty stacks, skipping score calculation");
         return;
+      }
+
+      // Guard against empty clicks arrays
+      if (visualClicks.length === 0 && auditoryClicks.length === 0) {
+        console.log("WARNING: Both click arrays are empty! This might be the issue.");
       }
 
       let vis_wrong_count = 0;
@@ -343,7 +403,9 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
   // Start game function
   const startGame = useCallback(async () => {
-    console.log(`Starting game N=${N} (demoMode: ${demoMode})`);
+    console.log(`=== START GAME CALLED ===`);
+    console.log(`N=${N}, demoMode=${demoMode}`);
+    console.log(`Current game state - gameActive: ${gameActive}, countdown: ${countdown}`);
 
     // Set initial states
     setGameActive(false);
@@ -392,6 +454,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     setVis_delays([]);
     setLetter_delays([]);
     setTime(0);
+    currentTurnPresses.current = { visual: false, auditory: false };
 
     if (demoMode) {
       // Demo mode: start immediately, no countdown
@@ -404,14 +467,21 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
       let gameIntervalId: NodeJS.Timeout;
 
       const doTimestepInterval = () => {
+        // First evaluate the previous turn if we had one
+        if (currentTime > 0) {
+          const prevTime = currentTime - 1;
+          evaluateTurn(prevTime, visual_stack, auditory_stack, currentTurnPresses.current.visual, currentTurnPresses.current.auditory);
+        }
+
         if (currentTime < visual_stack.length) {
           const letter_idx = auditory_stack[currentTime];
           const box_idx = visual_stack[currentTime];
           console.log(`${currentTime}: ${LETTERS[letter_idx]} / ${box_idx}`);
 
-          // Reset button states at start of new timestep
+          // Reset button states and turn presses at start of new timestep
           setVisButtonPressed(false);
           setLetterButtonPressed(false);
+          currentTurnPresses.current = { visual: false, auditory: false };
 
           // Flash the box briefly (like reference implementation)
           setFlashingBox(box_idx);
@@ -508,9 +578,11 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
       setMyInterval(gameIntervalId);
     } else {
       // Real game: start with countdown
-      console.log("REAL GAME: Starting with countdown");
+      console.log("=== REAL GAME: Starting with countdown ===");
+      console.log("About to setCountdown(3)");
       setCountdown(3);
       let countdownValue = 3;
+      console.log("Countdown set, about to create interval");
 
       const countdownInterval = setInterval(() => {
         countdownValue -= 1;
@@ -518,6 +590,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
         if (countdownValue <= 0) {
           clearInterval(countdownInterval);
+          countdownIntervalRef.current = null;
           setCountdown(0);
           setGameActive(true);
 
@@ -526,6 +599,12 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
           let gameIntervalId: NodeJS.Timeout;
 
           const doTimestepInterval = () => {
+            // First evaluate the previous turn if we had one
+            if (currentTime > 0) {
+              const prevTime = currentTime - 1;
+              evaluateTurn(prevTime, visual_stack, auditory_stack, currentTurnPresses.current.visual, currentTurnPresses.current.auditory);
+            }
+
             if (currentTime < visual_stack.length) {
               const letter_idx = auditory_stack[currentTime];
               const box_idx = visual_stack[currentTime];
@@ -533,9 +612,10 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                 `${currentTime}: ${LETTERS[letter_idx]} / ${box_idx}`,
               );
 
-              // Reset button states at start of new timestep
+              // Reset button states and turn presses at start of new timestep
               setVisButtonPressed(false);
               setLetterButtonPressed(false);
+              currentTurnPresses.current = { visual: false, auditory: false };
 
               // Flash the box briefly (like reference implementation)
               setFlashingBox(box_idx);
@@ -547,14 +627,25 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
               currentTime += 1;
             } else {
+              // Evaluate the final turn before ending
+              if (currentTime > 0) {
+                const finalTime = currentTime - 1;
+                evaluateTurn(finalTime, visual_stack, auditory_stack, currentTurnPresses.current.visual, currentTurnPresses.current.auditory);
+              }
+
               clearInterval(gameIntervalId);
               setMyInterval(null);
               console.log("REGULAR GAME COMPLETED - showing score");
-              // Use a timeout to ensure state has been updated
-              setTimeout(
-                () => calculateScore(visual_stack, auditory_stack),
-                100,
-              );
+              // Use a timeout to ensure state has been updated, and pass the current clicks
+              setTimeout(() => {
+                setVis_clicks(currentVisClicks => {
+                  setLetter_clicks(currentLetterClicks => {
+                    calculateScore(visual_stack, auditory_stack, currentVisClicks, currentLetterClicks);
+                    return currentLetterClicks;
+                  });
+                  return currentVisClicks;
+                });
+              }, 100);
             }
           };
 
@@ -566,6 +657,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
           setMyInterval(gameIntervalId);
         }
       }, 1000); // 1 second countdown intervals
+      countdownIntervalRef.current = countdownInterval;
     }
   }, [
     N,
@@ -575,6 +667,9 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     calculateScore,
     demoMode,
     playLetter,
+    evaluateTurn,
+    gameActive,
+    countdown,
   ]);
 
   // Cleanup interval on unmount
@@ -608,32 +703,57 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   };
 
   const handleRestart = () => {
+    console.log("=== RESTART CLICKED ===");
+    
+    // 1. Stop everything that's running
     if (myInterval) {
       clearInterval(myInterval);
       setMyInterval(null);
     }
-    // Stop any playing audio
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
     if (spritesRef.current) {
       spritesRef.current.stop();
     }
     if (window.Howler) {
       window.Howler.stop();
     }
+
+    // 2. Reset ALL state back to component mount state
     setVis_stack([]);
     setLetter_stack([]);
     setVis_clicks([]);
     setLetter_clicks([]);
+    setVis_delays([]);
+    setLetter_delays([]);
+    setVis_wrong(0);
+    setVis_misses(0);
+    setLetter_wrong(0);
+    setLetter_misses(0);
+    setVis_hits(0);
+    setLetter_hits(0);
+    setD_prime(0);
     setTime(0);
+    setTimestep_start(0);
+    currentTurnPresses.current = { visual: false, auditory: false };
+
+    // 3. Reset UI state to initial
+    setShowDialog(true);  // Back to initial dialog state
     setShowFeedback(false);
     setGameActive(false);
-    setShowDialog(true);
-    setFlashingBox(-1);
-    setVisButtonPressed(false);
-    setLetterButtonPressed(false);
     setCountdown(0);
     setDemoMode(false);
     setDemoComplete(false);
     setDemoAutoClick({ visual: false, auditory: false });
+    setFlashingBox(-1);
+    setVisButtonPressed(false);
+    setLetterButtonPressed(false);
+    setTurnFeedback(null);
+    setFeedbackEnabled(true);
+    
+    console.log("=== RESTART COMPLETE - showing dialog ===");
   };
 
   // Box flashing is now handled by flashingBox state instead of currentBoxIndex
@@ -847,13 +967,12 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                           </div>
                         )}
                         <div
-                          className={`w-14 h-14 text-xl font-bold font-mono border-2 rounded-xl flex items-center justify-center shadow-sm mx-auto ${
-                            isNBack
-                              ? "bg-yellow-200 border-yellow-400 text-yellow-800"
-                              : isRecentHistory
-                                ? "bg-gray-100 border-gray-300"
-                                : "bg-white border-gray-200 text-gray-400"
-                          }`}
+                          className={`w-14 h-14 text-xl font-bold font-mono border-2 rounded-xl flex items-center justify-center shadow-sm mx-auto ${isNBack
+                            ? "bg-yellow-200 border-yellow-400 text-yellow-800"
+                            : isRecentHistory
+                              ? "bg-gray-100 border-gray-300"
+                              : "bg-white border-gray-200 text-gray-400"
+                            }`}
                         >
                           {LETTERS[letterIdx]}
                         </div>
@@ -878,24 +997,47 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
           {/* Main content area - TIGHT SPACING */}
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-2 gap-2">
-            {/* Demo Button - above grid - show during active game */}
-            {!demoMode &&
-              gameActive &&
-              !showFeedback &&
-              countdown === 0 &&
-              !showDialog && (
-                <Button
-                  onClick={() => {
-                    setDemoMode(true);
-                    startGame();
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 mb-2"
-                >
-                  Show me a demo
-                </Button>
+            {/* Turn feedback display - ALWAYS takes up fixed space to prevent layout shift */}
+            <div className="h-12 flex items-center justify-center w-full">
+              {!demoMode && turnFeedback && gameActive && feedbackEnabled && (
+                <div className="text-center bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border shadow-sm">
+                  <div className="flex gap-4 justify-center text-sm items-center">
+                    {(() => {
+                      // Calculate what was correct
+                      const correct = [];
+                      if (turnFeedback.visual?.shouldHave) correct.push("Visual");
+                      if (turnFeedback.auditory?.shouldHave) correct.push("Verbal");
+                      const correctText = correct.length === 0 ? "Neither" :
+                        correct.length === 2 ? "Both" : correct[0];
+
+                      // Calculate what the user input
+                      const userInput = [];
+                      if (turnFeedback.visual?.pressed) userInput.push("Visual");
+                      if (turnFeedback.auditory?.pressed) userInput.push("Verbal");
+                      const userInputText = userInput.length === 0 ? "Neither" :
+                        userInput.length === 2 ? "Both" : userInput[0];
+
+                      const isCorrect = userInputText === correctText;
+
+                      return (
+                        <>
+                          <span className="font-medium text-gray-600">Previous:</span>
+                          <span className="text-blue-600 font-semibold">
+                            {correctText}
+                          </span>
+                          <span className={`text-lg font-bold ${isCorrect ? "text-green-600" : "text-red-600"}`}>
+                            {isCorrect ? "✓" : "✗"}
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
               )}
+            </div>
+
+            {/* Reserved space for demo button that's now moved to bottom right */}
+            <div className="h-8"></div>
 
             {/* Demo "I understand" button */}
             {demoMode && gameActive && (
@@ -917,6 +1059,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
                     if (countdownValue <= 0) {
                       clearInterval(countdownInterval);
+                      countdownIntervalRef.current = null;
                       setCountdown(0);
                       setGameActive(true);
 
@@ -963,6 +1106,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                       setMyInterval(gameIntervalId);
                     }
                   }, 1000);
+                  countdownIntervalRef.current = countdownInterval;
                 }}
                 size="sm"
                 className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 mb-2"
@@ -1105,15 +1249,51 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
         </div>
       )}
 
-      <Button
-        onClick={handleRestart}
-        variant="outline"
-        size="sm"
-        className="fixed bottom-4 right-4 z-50 bg-white/90 hover:bg-white shadow-lg"
-      >
-        <RotateCcw className="w-4 h-4 mr-1" />
-        Restart Exercise
-      </Button>
+      <div className="fixed bottom-4 right-4 z-50 flex flex-row gap-2">
+        {/* Show demo button during active game */}
+        {!demoMode &&
+          gameActive &&
+          !showFeedback &&
+          countdown === 0 &&
+          !showDialog && (
+            <Button
+              onClick={() => {
+                setDemoMode(true);
+                startGame();
+              }}
+              variant="outline"
+              size="sm"
+              className="bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg cursor-pointer"
+            >
+              Show Demo
+            </Button>
+          )}
+
+        {/* Toggle feedback button during active game */}
+        {!demoMode && gameActive && !showDialog && (
+          <Button
+            onClick={() => setFeedbackEnabled(!feedbackEnabled)}
+            variant="outline"
+            size="sm"
+            className={`backdrop-blur-sm shadow-lg cursor-pointer ${feedbackEnabled
+              ? "bg-blue-50/90 hover:bg-blue-100 text-blue-700 border-blue-200"
+              : "bg-white/90 hover:bg-white"
+              }`}
+          >
+            {feedbackEnabled ? "Feedback ON (toggle)" : "Feedback OFF (toggle)"}
+          </Button>
+        )}
+
+        <Button
+          onClick={handleRestart}
+          variant="outline"
+          size="sm"
+          className="bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg cursor-pointer"
+        >
+          <RotateCcw className="w-4 h-4 mr-1" />
+          Restart Exercise
+        </Button>
+      </div>
     </>
   );
 }
