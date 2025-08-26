@@ -77,6 +77,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     turn: number;
   } | null>(null);
   const [feedbackEnabled, setFeedbackEnabled] = useState(true);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   // Audio sprites reference
   const spritesRef = useRef<HowlSprite | null>(null);
@@ -411,7 +412,12 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     setGameActive(false);
     setShowFeedback(false);
 
-    await initializeAudio();
+    // Only initialize audio if not already loaded
+    if (!spritesRef.current) {
+      await initializeAudio();
+    } else {
+      console.log("Audio already loaded, skipping initialization");
+    }
 
     const [visual_stack, auditory_stack] = buildGameSequence();
     console.log("=== GENERATED SEQUENCE ===");
@@ -705,7 +711,16 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
   const handleRestart = () => {
     console.log("=== RESTART CLICKED ===");
     
-    // 1. Stop everything that's running
+    // Prevent double execution
+    if (isRestarting) {
+      console.log("Already restarting, ignoring");
+      return;
+    }
+    
+    setIsRestarting(true);
+    console.log("Set isRestarting to true");
+    
+    // Clear all intervals and audio
     if (myInterval) {
       clearInterval(myInterval);
       setMyInterval(null);
@@ -721,7 +736,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
       window.Howler.stop();
     }
 
-    // 2. Reset ALL state back to component mount state
+    // Reset everything to initial state
     setVis_stack([]);
     setLetter_stack([]);
     setVis_clicks([]);
@@ -738,22 +753,25 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     setTime(0);
     setTimestep_start(0);
     currentTurnPresses.current = { visual: false, auditory: false };
-
-    // 3. Reset UI state to initial
-    setShowDialog(true);  // Back to initial dialog state
     setShowFeedback(false);
     setGameActive(false);
+    setFlashingBox(-1);
+    setVisButtonPressed(false);
+    setLetterButtonPressed(false);
     setCountdown(0);
     setDemoMode(false);
     setDemoComplete(false);
     setDemoAutoClick({ visual: false, auditory: false });
-    setFlashingBox(-1);
-    setVisButtonPressed(false);
-    setLetterButtonPressed(false);
     setTurnFeedback(null);
     setFeedbackEnabled(true);
+    setShowDialog(false);
     
-    console.log("=== RESTART COMPLETE - showing dialog ===");
+    // Start fresh game directly
+    setTimeout(() => {
+      console.log("=== STARTING FRESH GAME AFTER RESTART ===");
+      setIsRestarting(false);
+      startGame();
+    }, 100);
   };
 
   // Box flashing is now handled by flashingBox state instead of currentBoxIndex
