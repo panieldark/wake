@@ -1,9 +1,9 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { RotateCcw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface BreathingExerciseProps {
@@ -18,10 +18,12 @@ export default function BreathingExercise({
 
   // Simple state tracking
   const [totalSecondsElapsed, setTotalSecondsElapsed] = useState(0);
+  const [showVisualization, setShowVisualization] = useState(false);
   const [showWorkCountdown, setShowWorkCountdown] = useState(false);
   const [workSecondsLeft, setWorkSecondsLeft] = useState(120);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [currentTime, setCurrentTimeNow] = useState(Date.now());
+  const [showVisualizationButton, setShowVisualizationButton] = useState(false);
 
   const TOTAL_SESSION_TIME = 64; // 4 cycles * 16 seconds
   const CYCLE_TIME = 16; // 4 seconds each phase
@@ -67,7 +69,11 @@ export default function BreathingExercise({
         // Check if we've completed all cycles
         if (next >= TOTAL_SESSION_TIME) {
           setIsActive(false);
-          setTimeout(() => setShowWorkCountdown(true), 1000);
+          setTimeout(() => {
+            setShowVisualization(true);
+            // Show button after 10 seconds
+            setTimeout(() => setShowVisualizationButton(true), 10000);
+          }, 1000);
           return prev;
         }
 
@@ -105,10 +111,12 @@ export default function BreathingExercise({
   const handleRestart = () => {
     setIsActive(false);
     setTotalSecondsElapsed(0);
+    setShowVisualization(false);
     setShowWorkCountdown(false);
     setWorkSecondsLeft(120);
     setSessionStartTime(null);
     setShowDialog(true);
+    setShowVisualizationButton(false);
   };
 
   // Calculate smooth, continuous animation values using real-time, not discrete seconds
@@ -237,12 +245,40 @@ export default function BreathingExercise({
         onStart={handleStartFromDialog}
       />
 
-      {showWorkCountdown ? (
+      {showVisualization ? (
         <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
           <Card className="animate-slide-up">
             <CardContent className="text-center py-16">
               <div className="space-y-6">
-                <h3 className="text-3xl font-light">Time to work</h3>
+                <h3 className="text-3xl pt-6 font-light">Picture your task</h3>
+                <p className="text-md text-gray-500 px-8">
+                  Close your eyes and picture the steps to set up and get your task done,
+                  getting it done, and how it'll feel after you get it done.
+                  <br />
+                  <br />
+                  Open your eyes only when you can see it  and know you'll get it done.
+                </p>
+                {showVisualizationButton && (
+                  <Button
+                    onClick={() => {
+                      setShowVisualization(false);
+                      setShowWorkCountdown(true);
+                    }}
+                    size="lg"
+                  >
+                    Continue
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : showWorkCountdown ? (
+        <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
+          <Card className="animate-slide-up">
+            <CardContent className="text-center py-16">
+              <div className="space-y-6">
+                <h3 className="text-3xl pt-4 font-light">Time to work</h3>
                 <p className="text-lg text-gray-600">
                   Leave this tab behind and just get started on what you would
                   want to get done.
@@ -316,20 +352,6 @@ export default function BreathingExercise({
               />
             </div>
           </div>
-        </div>
-      ) : !showDialog && !showWorkCountdown ? (
-        <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
-          <Card className="animate-slide-up">
-            <CardContent className="text-center py-16">
-              <div className="space-y-6">
-                <div className="text-6xl">✨</div>
-                <h3 className="text-3xl font-light">Ready to breathe?</h3>
-                <Button onClick={startExercise} size="lg">
-                  Begin Breathing Exercise
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       ) : null}
 

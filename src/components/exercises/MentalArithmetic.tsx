@@ -1,8 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface MentalArithmeticProps {
@@ -26,28 +26,37 @@ export default function MentalArithmetic({
   const [isActive, setIsActive] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showDialog, setShowDialog] = useState(true);
+  const difficulty = [9]; // 1-10 scale, fixed at 9
   const targetCorrect = 5;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const generateProblem = useCallback(() => {
+    const difficultyLevel = difficulty[0];
     const operations = ["+", "-", "*"];
     const operation = operations[Math.floor(Math.random() * operations.length)];
     let a: number, b: number, answer: number;
 
+    // Scale difficulty from 1-10 to appropriate ranges
+    const difficultyMultiplier = difficultyLevel / 5; // 0.2 to 2.0
+
     switch (operation) {
       case "+":
-        a = Math.floor(Math.random() * 50) + 10;
-        b = Math.floor(Math.random() * 50) + 10;
+        const addRange = Math.floor(25 * difficultyMultiplier) + 5; // 6-55 range
+        a = Math.floor(Math.random() * addRange) + 5;
+        b = Math.floor(Math.random() * addRange) + 5;
         answer = a + b;
         break;
       case "-":
-        a = Math.floor(Math.random() * 50) + 30;
-        b = Math.floor(Math.random() * 30) + 10;
+        const subRangeA = Math.floor(40 * difficultyMultiplier) + 20; // 20-100 range
+        const subRangeB = Math.floor(20 * difficultyMultiplier) + 5;  // 5-45 range
+        a = Math.floor(Math.random() * subRangeA) + 20;
+        b = Math.floor(Math.random() * Math.min(subRangeB, a - 1)) + 1; // Ensure positive result
         answer = a - b;
         break;
       case "*":
-        a = Math.floor(Math.random() * 12) + 2;
-        b = Math.floor(Math.random() * 12) + 2;
+        const mulRange = Math.floor(8 * difficultyMultiplier) + 2; // 2-18 range
+        a = Math.floor(Math.random() * mulRange) + 2;
+        b = Math.floor(Math.random() * mulRange) + 2;
         answer = a * b;
         break;
       default:
@@ -57,7 +66,7 @@ export default function MentalArithmetic({
     }
 
     return { question: `${a} ${operation} ${b}`, answer };
-  }, []);
+  }, [difficulty]);
 
   useEffect(() => {
     if (isActive && !currentProblem) {
@@ -142,11 +151,11 @@ export default function MentalArithmetic({
         open={showDialog}
         onOpenChange={setShowDialog}
         title="Mental Arithmetic"
-        description="Solve 5 math problems correctly"
-        instructions={
-          <p className="text-center">Type your answer and press Enter</p>
+        description="Warm your brain up with some mental math. No calculator!"
+        instructions={<></>
         }
         onStart={handleStartFromDialog}
+        disableClickAnywhere={false}
       />
 
       {showResults ? (
@@ -198,11 +207,10 @@ export default function MentalArithmetic({
 
           {feedback && (
             <div
-              className={`text-center p-4 rounded-lg animate-fade-in ${
-                feedback.isCorrect
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}
+              className={`text-center p-4 rounded-lg animate-fade-in ${feedback.isCorrect
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+                }`}
             >
               <p className="font-semibold">{feedback.message}</p>
             </div>

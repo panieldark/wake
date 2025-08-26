@@ -12,6 +12,7 @@ interface ExerciseInstructionDialogProps {
   instructions: ReactNode;
   onStart: () => void;
   additionalButtons?: ReactNode;
+  disableClickAnywhere?: boolean;
 }
 
 export function ExerciseInstructionDialog({
@@ -22,6 +23,7 @@ export function ExerciseInstructionDialog({
   instructions,
   onStart,
   additionalButtons,
+  disableClickAnywhere = false,
 }: ExerciseInstructionDialogProps) {
   const handleClose = () => {
     onOpenChange(false);
@@ -32,10 +34,12 @@ export function ExerciseInstructionDialog({
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         {/* Invisible overlay that handles clicks */}
-        <DialogPrimitive.Overlay
-          className="fixed inset-0 z-[9999] cursor-pointer"
-          onClick={handleClose}
-        />
+        {!disableClickAnywhere && (
+          <DialogPrimitive.Overlay
+            className="fixed inset-0 z-[9999] cursor-pointer"
+            onClick={handleClose}
+          />
+        )}
 
         {/* Visual backdrop */}
         <div className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
@@ -61,9 +65,11 @@ export function ExerciseInstructionDialog({
           <div className="my-6">{instructions}</div>
 
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500 animate-pulse">
-              Tap anywhere to start
-            </p>
+            {!disableClickAnywhere && (
+              <p className="text-sm text-gray-500 animate-pulse">
+                Tap anywhere to start
+              </p>
+            )}
             {additionalButtons && (
               <div className="mt-4 flex justify-center gap-2">
                 {additionalButtons}

@@ -1,9 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface ClickingDrillProps {
@@ -32,9 +32,17 @@ export default function ClickingDrill({
   const gameDuration = 20000; // 20 seconds
 
   const generateTarget = useCallback(() => {
-    const margin = 50;
-    const x = Math.random() * (window.innerWidth - 2 * margin) + margin;
-    const y = Math.random() * (window.innerHeight - 200) + 100;
+    // More restrictive margins to avoid UI conflicts
+    const margin = 80;
+    const bottomMargin = 200; // Extra space for bottom buttons
+    const topMargin = 200; // Extra space for top UI
+
+    const maxWidth = window.innerWidth - 2 * margin;
+    const maxHeight = window.innerHeight - bottomMargin - topMargin;
+
+    const x = Math.random() * maxWidth + margin;
+    const y = Math.random() * maxHeight + topMargin;
+
     return { x, y, id: Date.now() };
   }, []);
 
@@ -218,7 +226,7 @@ export default function ClickingDrill({
                 mass: 5.4,
               }}
               onClick={(e) => handleTargetClick(e, target.id)}
-              className="absolute w-8 h-8 bg-gray-900 rounded-full shadow-lg"
+              className="absolute w-8 h-8 bg-gray-900 rounded-full shadow-lg z-40"
               style={{
                 left: `${target.x - 16}px`,
                 top: `${target.y - 16}px`,

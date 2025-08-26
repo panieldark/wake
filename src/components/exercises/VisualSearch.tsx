@@ -1,7 +1,5 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface VisualSearchProps {
@@ -121,8 +121,10 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
       setScore(score + 1);
 
       if (currentRound < totalRounds) {
-        setCurrentRound(currentRound + 1);
-        setLevel(Math.min(level + 1, maxLevel)); // Increase difficulty each round
+        const nextRound = currentRound + 1;
+        setCurrentRound(nextRound);
+        // Level increases with each successful round: 3, 4, 5, etc.
+        setLevel(Math.min(2 + nextRound, maxLevel)); // Round 1 = level 3, Round 2 = level 4, etc.
       } else {
         // All rounds completed!
         setGameStarted(false);
@@ -130,7 +132,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
         return;
       }
     } else {
-      // Was wrong
+      // Was wrong - don't advance round or level, just retry
       playErrorSound();
       setScore(Math.max(0, score - 1));
     }
@@ -150,8 +152,10 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
   }, [newRound]);
 
   useEffect(() => {
-    startGame();
-  }, [startGame]);
+    if (!gameStarted && currentRound === 1 && score === 0) {
+      startGame();
+    }
+  }, []); // Only run once on mount
 
   const renderShape = (cell: Cell) => {
     if (!cell) return null;
@@ -204,14 +208,14 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 ...(cell.filled
                   ? {}
                   : {
-                      borderBottomColor: "transparent",
-                      borderBottomWidth: `${size - 4}px`,
-                      borderLeftWidth: `${size / 2 - 2}px`,
-                      borderRightWidth: `${size / 2 - 2}px`,
-                      borderBottom: `${size - 4}px solid transparent`,
-                      outline: `2px solid ${color}`,
-                      outlineOffset: "-2px",
-                    }),
+                    borderBottomColor: "transparent",
+                    borderBottomWidth: `${size - 4}px`,
+                    borderLeftWidth: `${size / 2 - 2}px`,
+                    borderRightWidth: `${size / 2 - 2}px`,
+                    borderBottom: `${size - 4}px solid transparent`,
+                    outline: `2px solid ${color}`,
+                    outlineOffset: "-2px",
+                  }),
               }}
             />
           </div>
@@ -267,6 +271,12 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
 
   const handleStartFromDialog = () => {
     setShowDialog(false);
+    // Ensure game starts fresh
+    setGameStarted(true);
+    setCurrentRound(1);
+    setLevel(3);
+    setScore(0);
+    newRound();
   };
 
   const handleRestart = () => {
@@ -369,7 +379,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                   onClick={() => checkMatch(true)}
                   disabled={!gameStarted}
                   size="lg"
-                  className="min-w-[120px] bg-green-200/80 hover:bg-gray-200 hover:scale-95 transition-all duration-150 text-gray-700"
+                  className="min-w-[120px] bg-green-200/80 hover:bg-green-300/70 hover:scale-95 transition-all duration-150 text-gray-700"
                 >
                   Match
                 </Button>
@@ -377,7 +387,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                   onClick={() => checkMatch(false)}
                   disabled={!gameStarted}
                   size="lg"
-                  className="min-w-[120px] bg-red-200/90 hover:bg-gray-200 hover:scale-95 transition-all duration-150 text-gray-700"
+                  className="min-w-[120px] bg-red-200/90 hover:bg-red-300/80 hover:scale-95 transition-all duration-150 text-gray-700"
                 >
                   Mismatch
                 </Button>

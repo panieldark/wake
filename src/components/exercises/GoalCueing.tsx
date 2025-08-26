@@ -18,12 +18,26 @@ interface GoalCueingProps {
 }
 
 export default function GoalCueing({ onComplete }: GoalCueingProps) {
-  const [goal, setGoal] = useState("");
+  const [goal, setGoal] = useState("In the next hour, I will ");
   const [submitted, setSubmitted] = useState(false);
   const [showDialog, setShowDialog] = useState(true);
+  const startingText = "In the next hour, I will ";
+
+  const handleGoalChange = (value: string) => {
+    // Ensure the starting text is always present and cannot be deleted
+    if (value.startsWith(startingText)) {
+      setGoal(value);
+    } else if (value.length < startingText.length) {
+      // If user tries to delete part of the starting text, restore it
+      setGoal(startingText);
+    } else {
+      // If user typed before the starting text, prepend the starting text
+      setGoal(startingText + value.replace(startingText, ''));
+    }
+  };
 
   const handleSubmit = () => {
-    if (goal.trim().length > 10) {
+    if (goal.trim().length > startingText.length + 5) {
       setSubmitted(true);
       setTimeout(onComplete, 3000);
     }
@@ -34,7 +48,7 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
   };
 
   const handleRestart = () => {
-    setGoal("");
+    setGoal(startingText);
     setSubmitted(false);
     setShowDialog(true);
   };
@@ -99,15 +113,23 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
               <div className="space-y-6">
                 <Textarea
                   value={goal}
-                  onChange={(e) => setGoal(e.target.value)}
-                  placeholder="In the next hour, I will..."
+                  onChange={(e) => handleGoalChange(e.target.value)}
                   className="min-h-[120px]"
                   autoFocus
+                  onKeyDown={(e) => {
+                    // Prevent deleting the starting text with backspace
+                    if (e.key === 'Backspace') {
+                      const cursorPos = (e.target as HTMLTextAreaElement).selectionStart;
+                      if (cursorPos <= startingText.length) {
+                        e.preventDefault();
+                      }
+                    }
+                  }}
                 />
 
                 <Button
                   onClick={handleSubmit}
-                  disabled={goal.trim().length < 10}
+                  disabled={goal.trim().length < startingText.length + 5}
                   className="w-full"
                   size="lg"
                 >
