@@ -32,7 +32,7 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
       setGoal(startingText);
     } else {
       // If user typed before the starting text, prepend the starting text
-      setGoal(startingText + value.replace(startingText, ''));
+      setGoal(startingText + value.replace(startingText, ""));
     }
   };
 
@@ -118,8 +118,9 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
                   autoFocus
                   onKeyDown={(e) => {
                     // Prevent deleting the starting text with backspace
-                    if (e.key === 'Backspace') {
-                      const cursorPos = (e.target as HTMLTextAreaElement).selectionStart;
+                    if (e.key === "Backspace") {
+                      const cursorPos = (e.target as HTMLTextAreaElement)
+                        .selectionStart;
                       if (cursorPos <= startingText.length) {
                         e.preventDefault();
                       }

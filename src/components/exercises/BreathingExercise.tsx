@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface BreathingExerciseProps {
@@ -252,11 +252,13 @@ export default function BreathingExercise({
               <div className="space-y-6">
                 <h3 className="text-3xl pt-6 font-light">Picture your task</h3>
                 <p className="text-md text-gray-500 px-8">
-                  Close your eyes and picture the steps to set up and get your task done,
-                  getting it done, and how it'll feel after you get it done.
+                  Close your eyes and picture the steps to set up and get your
+                  task done, getting it done, and how it'll feel after you get
+                  it done.
                   <br />
                   <br />
-                  Open your eyes only when you can see it  and know you'll get it done.
+                  Open your eyes only when you can see it and know you'll get it
+                  done.
                 </p>
                 {showVisualizationButton && (
                   <Button

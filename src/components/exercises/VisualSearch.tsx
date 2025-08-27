@@ -1,5 +1,7 @@
 "use client";
 
+import { RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,8 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RotateCcw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface VisualSearchProps {
@@ -151,6 +151,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
     newRound();
   }, [newRound]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Only run once on mount
   useEffect(() => {
     if (!gameStarted && currentRound === 1 && score === 0) {
       startGame();
@@ -208,14 +209,14 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 ...(cell.filled
                   ? {}
                   : {
-                    borderBottomColor: "transparent",
-                    borderBottomWidth: `${size - 4}px`,
-                    borderLeftWidth: `${size / 2 - 2}px`,
-                    borderRightWidth: `${size / 2 - 2}px`,
-                    borderBottom: `${size - 4}px solid transparent`,
-                    outline: `2px solid ${color}`,
-                    outlineOffset: "-2px",
-                  }),
+                      borderBottomColor: "transparent",
+                      borderBottomWidth: `${size - 4}px`,
+                      borderLeftWidth: `${size / 2 - 2}px`,
+                      borderRightWidth: `${size / 2 - 2}px`,
+                      borderBottom: `${size - 4}px solid transparent`,
+                      outline: `2px solid ${color}`,
+                      outlineOffset: "-2px",
+                    }),
               }}
             />
           </div>

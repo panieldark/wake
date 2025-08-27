@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface MentalArithmeticProps {
@@ -40,25 +40,28 @@ export default function MentalArithmetic({
     const difficultyMultiplier = difficultyLevel / 5; // 0.2 to 2.0
 
     switch (operation) {
-      case "+":
+      case "+": {
         const addRange = Math.floor(25 * difficultyMultiplier) + 5; // 6-55 range
         a = Math.floor(Math.random() * addRange) + 5;
         b = Math.floor(Math.random() * addRange) + 5;
         answer = a + b;
         break;
-      case "-":
+      }
+      case "-": {
         const subRangeA = Math.floor(40 * difficultyMultiplier) + 20; // 20-100 range
-        const subRangeB = Math.floor(20 * difficultyMultiplier) + 5;  // 5-45 range
+        const subRangeB = Math.floor(20 * difficultyMultiplier) + 5; // 5-45 range
         a = Math.floor(Math.random() * subRangeA) + 20;
         b = Math.floor(Math.random() * Math.min(subRangeB, a - 1)) + 1; // Ensure positive result
         answer = a - b;
         break;
-      case "*":
+      }
+      case "*": {
         const mulRange = Math.floor(8 * difficultyMultiplier) + 2; // 2-18 range
         a = Math.floor(Math.random() * mulRange) + 2;
         b = Math.floor(Math.random() * mulRange) + 2;
         answer = a * b;
         break;
+      }
       default:
         a = 0;
         b = 0;
@@ -66,7 +69,7 @@ export default function MentalArithmetic({
     }
 
     return { question: `${a} ${operation} ${b}`, answer };
-  }, [difficulty]);
+  }, []);
 
   useEffect(() => {
     if (isActive && !currentProblem) {
@@ -152,8 +155,7 @@ export default function MentalArithmetic({
         onOpenChange={setShowDialog}
         title="Mental Arithmetic"
         description="Warm your brain up with some mental math. No calculator!"
-        instructions={<></>
-        }
+        instructions={null}
         onStart={handleStartFromDialog}
         disableClickAnywhere={false}
       />
@@ -207,10 +209,11 @@ export default function MentalArithmetic({
 
           {feedback && (
             <div
-              className={`text-center p-4 rounded-lg animate-fade-in ${feedback.isCorrect
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-                }`}
+              className={`text-center p-4 rounded-lg animate-fade-in ${
+                feedback.isCorrect
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
             >
               <p className="font-semibold">{feedback.message}</p>
             </div>
