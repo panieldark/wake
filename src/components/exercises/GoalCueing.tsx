@@ -1,7 +1,5 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,6 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { RotateCcw } from "lucide-react";
+import { useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface GoalCueingProps {
@@ -58,36 +58,26 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
       <ExerciseInstructionDialog
         open={showDialog}
         onOpenChange={setShowDialog}
-        title="Goal Crystallization"
-        description="Clarify your immediate goals to boost focus and motivation."
+        title="Set a Goal"
         instructions={
           <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold mb-2">🎯 Purpose</h4>
-              <p className="text-sm">
-                This exercise helps you identify what you truly want to
-                accomplish in the next hour. By focusing on the satisfaction of
-                completion rather than the effort required, you can overcome
-                procrastination and build momentum.
-              </p>
-            </div>
-
             <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-semibold mb-2">💡 How to Approach This</h4>
+              <h4 className="font-semibold mb-2">How to Approach This</h4>
               <ul className="text-sm space-y-1 list-disc list-inside">
                 <li>
-                  Think about what would make you feel satisfied in 1 hour
+                  Think about what would make you feel satisfied in an hour
                 </li>
-                <li>Focus on the end result, not the process</li>
                 <li>Be specific and realistic</li>
-                <li>Choose something meaningful to you right now</li>
+                <li>
+                  Don't think too hard here
+                </li>
               </ul>
             </div>
 
             <div className="p-4 bg-amber-50 rounded-lg">
               <p className="text-sm">
                 <strong>Remember:</strong> The goal is to create clarity and
-                commitment. Your answer should excite you enough to overcome
+                commitment. Picking something here will help to overcome
                 inertia.
               </p>
             </div>
@@ -99,12 +89,12 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
       <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
         <Card className="animate-slide-up">
           <CardHeader className="text-center">
-            <CardTitle>Goal Crystallization</CardTitle>
+            <CardTitle>Set a Goal</CardTitle>
             <CardDescription className="space-y-2 mt-4">
               <p>What will you feel good about completing in the next hour?</p>
               <p className="text-sm">
-                Forget the activation effort. Looking back in one hour, what
-                would make you satisfied?
+                Forget the effort to start. Looking back in one hour, what
+                would you feel good about finishing?
               </p>
             </CardDescription>
           </CardHeader>
@@ -145,12 +135,6 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
                   </p>
                   <p className="text-lg text-gray-900 italic">"{goal}"</p>
                 </div>
-                <div className="flex justify-center">
-                  <div className="text-5xl">🎯</div>
-                </div>
-                <p className="text-gray-600">
-                  Goal locked in. Let's make it happen.
-                </p>
               </div>
             )}
           </CardContent>

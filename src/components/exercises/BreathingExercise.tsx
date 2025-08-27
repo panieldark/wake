@@ -1,9 +1,9 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { RotateCcw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface BreathingExerciseProps {
@@ -134,8 +134,8 @@ export default function BreathingExercise({
   };
 
   // Calculate smooth, continuous animation values using real-time, not discrete seconds
-  const baseScale = 0.8;
-  const maxScale = 1.3;
+  const baseScale = 0.9;
+  const maxScale = 1.15;
 
   // Use real-time elapsed milliseconds for smooth animation
   const realTimeElapsed = sessionStartTime
@@ -223,37 +223,10 @@ export default function BreathingExercise({
       <ExerciseInstructionDialog
         open={showDialog}
         onOpenChange={setShowDialog}
-        title="Box Breathing Exercise"
-        description="A calming breathing technique to reduce stress and improve focus."
+        title="Breathing Exercise"
         instructions={
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold mb-2">🫁 Box Breathing Pattern</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                <li>Breathe IN for 4 seconds</li>
-                <li>HOLD for 4 seconds</li>
-                <li>Breathe OUT for 4 seconds</li>
-                <li>HOLD for 4 seconds</li>
-              </ul>
-              <p className="text-sm mt-2">Repeat this cycle 4 times.</p>
-            </div>
-
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-semibold mb-2">🎯 Benefits</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                <li>Activates your parasympathetic nervous system</li>
-                <li>Reduces stress and anxiety</li>
-                <li>Improves concentration and mental clarity</li>
-                <li>Helps transition into focused work</li>
-              </ul>
-            </div>
-
-            <div className="p-4 bg-amber-50 rounded-lg">
-              <p className="text-sm">
-                <strong>Pro tip:</strong> Follow the on-screen visual cues. The
-                circle will expand and contract to guide your breathing rhythm.
-              </p>
-            </div>
+          <div className="p-6 bg-gray-50 rounded-lg">
+            <p className="text-lg font-medium text-gray-700 text-center">Take some deep breaths to clear your head and get focused</p>
           </div>
         }
         onStart={handleStartFromDialog}

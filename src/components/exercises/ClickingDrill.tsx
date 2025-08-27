@@ -1,9 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface ClickingDrillProps {
@@ -155,30 +155,9 @@ export default function ClickingDrill({
         open={showDialog}
         onOpenChange={setShowDialog}
         title="Clicking Precision Drill"
-        description="Test and improve your mouse accuracy and reaction time by clicking targets as quickly as possible."
         instructions={
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold mb-2">🎯 How to Play</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                <li>Click on the appearing targets as fast as you can</li>
-                <li>
-                  You have 20 seconds to click as many targets as possible
-                </li>
-                <li>Each target appears in a random position</li>
-                <li>Your clicks per second will be measured</li>
-              </ul>
-            </div>
-
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-semibold mb-2">💡 Tips</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                <li>Focus on accuracy over speed</li>
-                <li>Keep your mouse hand relaxed</li>
-                <li>Try to anticipate where targets might appear</li>
-                <li>Practice smooth, controlled movements</li>
-              </ul>
-            </div>
+          <div className="p-8 bg-gradient-to-br from-orange-50 to-red-100 rounded-xl border border-orange-200 shadow-sm">
+            <p className="text-xl font-semibold text-gray-800 text-center">Click the targets as fast as you can</p>
           </div>
         }
         onStart={handleStartFromDialog}

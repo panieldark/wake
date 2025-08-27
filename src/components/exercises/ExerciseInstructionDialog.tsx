@@ -1,15 +1,15 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
 
 interface ExerciseInstructionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
-  instructions: ReactNode;
+  description?: string | null;
+  instructions?: ReactNode | null;
   onStart: () => void;
   additionalButtons?: ReactNode;
   disableClickAnywhere?: boolean;

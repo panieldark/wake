@@ -1,7 +1,5 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface VisualSearchProps {
@@ -209,14 +209,14 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
                 ...(cell.filled
                   ? {}
                   : {
-                      borderBottomColor: "transparent",
-                      borderBottomWidth: `${size - 4}px`,
-                      borderLeftWidth: `${size / 2 - 2}px`,
-                      borderRightWidth: `${size / 2 - 2}px`,
-                      borderBottom: `${size - 4}px solid transparent`,
-                      outline: `2px solid ${color}`,
-                      outlineOffset: "-2px",
-                    }),
+                    borderBottomColor: "transparent",
+                    borderBottomWidth: `${size - 4}px`,
+                    borderLeftWidth: `${size / 2 - 2}px`,
+                    borderRightWidth: `${size / 2 - 2}px`,
+                    borderBottom: `${size - 4}px solid transparent`,
+                    outline: `2px solid ${color}`,
+                    outlineOffset: "-2px",
+                  }),
               }}
             />
           </div>
@@ -295,31 +295,19 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
       <ExerciseInstructionDialog
         open={showDialog}
         onOpenChange={setShowDialog}
-        title="Visual Feature Matching"
-        description="Find matching features between two grids of shapes while filtering out distractions."
+        title="Feature Match"
         instructions={
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold mb-2">🔍 How to Play</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                <li>Two grids will appear with various shapes</li>
-                <li>Find if ANY features match between the grids</li>
-                <li>Features include: shape type, fill, and rotation</li>
-                <li>Click "Match" or "No Match" based on what you find</li>
-                <li>Difficulty increases as you progress</li>
-              </ul>
-            </div>
+          <div className="p-6 bg-gray-50 rounded-lg">
+            <p className="text-lg text-neutral-700 font-medium text-center mb-6">Compare the shapes between the two grids. At most, one shape may not match. Identify correctly.</p>
 
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-semibold mb-2">🎯 Strategy Tips</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                <li>Scan systematically - don't jump randomly</li>
-                <li>
-                  Check one feature at a time (shape, then fill, then rotation)
-                </li>
-                <li>Ignore empty cells - focus on shapes only</li>
-                <li>Speed matters, but accuracy is key</li>
-              </ul>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="text-center">
+                <img src="/instructions/match.png" alt="Match example" className="w-full max-w-xs mx-auto mb-2 rounded-lg" />
+              </div>
+
+              <div className="text-center">
+                <img src="/instructions/mismatch.png" alt="Mismatch example" className="w-full max-w-xs mx-auto mb-2 rounded-lg" />
+              </div>
             </div>
           </div>
         }

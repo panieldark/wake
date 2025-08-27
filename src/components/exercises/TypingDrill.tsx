@@ -1,7 +1,5 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,6 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
@@ -128,7 +128,7 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
       const calculatedWpm = Math.ceil(wordsTyped / timeInMinutes); // Round up
       const calculatedAccuracy = Math.round(
         ((currentSentence.length - errors.length) / currentSentence.length) *
-          100,
+        100,
       );
 
       setWpm(calculatedWpm);
@@ -172,29 +172,10 @@ export default function TypingDrill({ onComplete }: TypingDrillProps) {
       <ExerciseInstructionDialog
         open={showDialog}
         onOpenChange={setShowDialog}
-        title="Typing Speed & Accuracy Drill"
-        description="Improve your typing speed and accuracy by typing sentences as quickly and accurately as possible."
+        title="Typing"
         instructions={
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold mb-2">📝 How it works</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                <li>You'll type 5 randomly selected sentences</li>
-                <li>Type each sentence exactly as shown</li>
-                <li>Your speed (WPM) and accuracy will be measured</li>
-                <li>After each sentence, you'll get a stretch reminder</li>
-              </ul>
-            </div>
-
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-semibold mb-2">⌨️ Tips for Success</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                <li>Focus on accuracy first, speed will follow</li>
-                <li>Keep your fingers on the home row</li>
-                <li>Look at the sentence, not your keyboard</li>
-                <li>Take the stretch breaks seriously!</li>
-              </ul>
-            </div>
+          <div className="p-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl border border-blue-200 shadow-sm">
+            <p className="text-xl font-semibold text-gray-800 text-center">Type the sentence as fast as you can</p>
           </div>
         }
         onStart={handleStartFromDialog}

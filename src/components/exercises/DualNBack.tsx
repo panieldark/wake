@@ -1,10 +1,10 @@
 "use client";
 
-import { RotateCcw, Eye, Volume2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Eye, RotateCcw, Volume2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface DualNBackProps {
@@ -572,6 +572,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
             );
 
             // Immediately show which buttons should be pressed
+            console.log("Setting demoAutoClick to:", { visual: shouldClickVisual, auditory: shouldClickAuditory });
             setDemoAutoClick({
               visual: shouldClickVisual,
               auditory: shouldClickAuditory,
@@ -850,36 +851,19 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
       <ExerciseInstructionDialog
         open={showDialog}
         onOpenChange={setShowDialog}
+        description={``}
         title={`Dual ${N}-Back Training`}
-        description={`This exercise will challenge your working memory by requiring you to remember both visual positions and auditory letters from ${N} steps back.`}
         instructions={
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-2">👁️ Visual Task</h4>
-                <p className="text-sm">
-                  Watch squares light up in a 3×3 grid. Press the eye button
-                  when the position matches {N} steps back.
-                </p>
-              </div>
-
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-semibold mb-2">🔊 Auditory Task</h4>
-                <p className="text-sm">
-                  Listen to spoken letters. Press the speaker button when the
-                  letter matches {N} steps back.
-                </p>
-              </div>
+          <div className="p-6 bg-gray-50 rounded-lg">
+            <p className="text-lg font-semibold text-black mb-4">Each turn shows a <span className="text-blue-600">square</span> + plays a <span className="text-orange-400">letter</span>. Compare them to exactly <span className="font-bold text-black bg-yellow-200 px-1 rounded">{N} turns ago</span>.</p>
+            <img src="/instructions/dualnback.png" alt="Dual N-Back Instructions" className="w-80 max-w-xs mx-auto mb-4 rounded-lg" />
+            <div className="space-y-3 text-base">
+              <p className="text-black">If the <span className="text-blue-600 font-semibold">square</span> matches <span className="font-bold text-black bg-yellow-200 px-1 rounded">{N} turns ago</span> → pick <span className="text-blue-600 font-semibold">Visual</span></p>
+              <p className="text-black">If the <span className="text-orange-400 font-semibold">letter</span> matches <span className="font-bold text-black bg-yellow-200 px-1 rounded">{N} turns ago</span> → pick <span className="text-orange-400 font-semibold">Verbal</span></p>
+              <p className="text-black">If neither → do nothing</p>
+              <p className="text-black">If <span className="text-green-600 font-semibold">both</span> → pick <span className="text-green-600 font-semibold">both</span> buttons</p>
             </div>
-
-            <div className="bg-amber-50 p-4 rounded-lg mt-4">
-              <p className="text-sm">
-                <strong>Remember:</strong> You're comparing the current stimulus
-                with what appeared {N} steps ago. Both tasks run simultaneously,
-                so stay focused!
-              </p>
-            </div>
-          </>
+          </div>
         }
         onStart={handleStartFromDialog}
       />
@@ -1041,13 +1025,12 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                           </div>
                         )}
                         <div
-                          className={`w-14 h-14 text-xl font-bold font-mono border-2 rounded-xl flex items-center justify-center shadow-sm mx-auto ${
-                            isNBack
-                              ? "bg-yellow-200 border-yellow-400 text-yellow-800"
-                              : isRecentHistory
-                                ? "bg-gray-100 border-gray-300"
-                                : "bg-white border-gray-200 text-gray-400"
-                          }`}
+                          className={`w-14 h-14 text-xl font-bold font-mono border-2 rounded-xl flex items-center justify-center shadow-sm mx-auto ${isNBack
+                            ? "bg-yellow-200 border-yellow-400 text-yellow-800"
+                            : isRecentHistory
+                              ? "bg-gray-100 border-gray-300"
+                              : "bg-white border-gray-200 text-gray-400"
+                            }`}
                         >
                           {LETTERS[letterIdx]}
                         </div>
@@ -1131,7 +1114,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
             <div className="h-8"></div>
 
             {/* Demo "I understand" button */}
-            {demoMode && gameActive && (
+            {/* {demoMode && gameActive && (
               <Button
                 onClick={() => {
                   if (myInterval) {
@@ -1141,6 +1124,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                   setDemoMode(false);
                   setDemoAutoClick({ visual: false, auditory: false });
                   setGameActive(false);
+                  setTurnFeedback(null);
                   setCountdown(3);
                   let countdownValue = 3;
 
@@ -1204,7 +1188,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
               >
                 I understand it now
               </Button>
-            )}
+            )} */}
 
             {/* Grid container */}
             <div className="w-full max-w-xs aspect-square">
@@ -1324,15 +1308,21 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                   Correct answer:
                 </div>
                 <div className="text-lg font-bold">
-                  {demoAutoClick.visual && demoAutoClick.auditory ? (
-                    <span className="text-green-600">Both Visual + Verbal</span>
-                  ) : demoAutoClick.visual ? (
-                    <span className="text-blue-600">Visual</span>
-                  ) : demoAutoClick.auditory ? (
-                    <span className="text-purple-600">Verbal</span>
-                  ) : (
-                    <span className="text-gray-600">Neither</span>
-                  )}
+                  {(() => {
+                    // Calculate correct answer directly from game state
+                    const visualMatch = vis_stack[time] === vis_stack[time - N];
+                    const auditoryMatch = letter_stack[time] === letter_stack[time - N];
+
+                    if (visualMatch && auditoryMatch) {
+                      return <span className="text-green-600">Both Visual + Verbal</span>;
+                    } else if (visualMatch) {
+                      return <span className="text-blue-600">Visual</span>;
+                    } else if (auditoryMatch) {
+                      return <span className="text-orange-400">Verbal</span>;
+                    } else {
+                      return <span className="text-gray-600">Neither</span>;
+                    }
+                  })()}
                 </div>
               </div>
             )}
@@ -1366,11 +1356,10 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
             onClick={() => setFeedbackEnabled(!feedbackEnabled)}
             variant="outline"
             size="sm"
-            className={`backdrop-blur-sm shadow-lg cursor-pointer ${
-              feedbackEnabled
-                ? "bg-blue-50/90 hover:bg-blue-100 text-blue-700 border-blue-200"
-                : "bg-white/90 hover:bg-white"
-            }`}
+            className={`backdrop-blur-sm shadow-lg cursor-pointer ${feedbackEnabled
+              ? "bg-blue-50/90 hover:bg-blue-100 text-blue-700 border-blue-200"
+              : "bg-white/90 hover:bg-white"
+              }`}
           >
             {feedbackEnabled ? "Feedback ON (toggle)" : "Feedback OFF (toggle)"}
           </Button>
