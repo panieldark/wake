@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Eye, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -760,6 +760,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
 
   const handleStartFromDialog = () => {
     setShowDialog(false);
+    setCountdown(3); // Set countdown immediately to prevent flash
     startGame();
   };
 
@@ -1283,7 +1284,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                 )}
               >
                 <span className="font-semibold">Visual</span>
-                <span className="text-lg">👁️</span>
+                <Eye className="w-4 h-4" />
                 {demoMode && demoAutoClick.visual && (
                   <div className="absolute -top-2 -right-2 bg-yellow-400 text-black text-xs px-2 py-1 rounded font-bold animate-pulse">
                     MATCH!
@@ -1307,7 +1308,7 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
                 )}
               >
                 <span className="font-semibold">Verbal</span>
-                <span className="text-lg">🔊</span>
+                <Volume2 className="w-4 h-4" />
                 {demoMode && demoAutoClick.auditory && (
                   <div className="absolute -top-2 -right-2 bg-yellow-400 text-black text-xs px-2 py-1 rounded font-bold animate-pulse">
                     MATCH!

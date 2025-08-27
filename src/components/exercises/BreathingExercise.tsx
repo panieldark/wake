@@ -22,6 +22,7 @@ export default function BreathingExercise({
   const [showWorkCountdown, setShowWorkCountdown] = useState(false);
   const [workSecondsLeft, setWorkSecondsLeft] = useState(120);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [workCountdownStartTime, setWorkCountdownStartTime] = useState<number | null>(null);
   const [currentTime, setCurrentTimeNow] = useState(Date.now());
   const [showVisualizationButton, setShowVisualizationButton] = useState(false);
 
@@ -58,44 +59,56 @@ export default function BreathingExercise({
     return () => cancelAnimationFrame(animationFrameId);
   }, [isActive, sessionStartTime]);
 
-  // Main timer - just counts seconds
+  // Main timer - calculate elapsed time based on timestamps for accuracy across tab changes
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive || !sessionStartTime) return;
 
-    const timer = setInterval(() => {
-      setTotalSecondsElapsed((prev) => {
-        const next = prev + 1;
+    const updateElapsed = () => {
+      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+      setTotalSecondsElapsed(elapsed);
 
-        // Check if we've completed all cycles
-        if (next >= TOTAL_SESSION_TIME) {
-          setIsActive(false);
-          setTimeout(() => {
-            setShowVisualization(true);
-            // Show button after 10 seconds
-            setTimeout(() => setShowVisualizationButton(true), 10000);
-          }, 1000);
-          return prev;
-        }
+      // Check if we've completed all cycles
+      if (elapsed >= TOTAL_SESSION_TIME) {
+        setIsActive(false);
+        setTimeout(() => {
+          setShowVisualization(true);
+          // Show button after 10 seconds
+          setTimeout(() => setShowVisualizationButton(true), 10000);
+        }, 1000);
+        return;
+      }
+    };
 
-        return next;
-      });
-    }, 1000);
+    // Update immediately
+    updateElapsed();
 
+    // Use shorter interval for more responsive updates, but rely on timestamp calculations
+    const timer = setInterval(updateElapsed, 100);
     return () => clearInterval(timer);
-  }, [isActive]);
+  }, [isActive, sessionStartTime]);
 
-  // Work countdown timer
+  // Work countdown timer - calculate remaining time based on timestamps for accuracy across tab changes
   useEffect(() => {
-    if (!showWorkCountdown) return;
-    const timer = setInterval(() => {
-      setWorkSecondsLeft((prev) => {
-        if (prev > 1) return prev - 1;
+    if (!showWorkCountdown || !workCountdownStartTime) return;
+
+    const updateCountdown = () => {
+      const elapsed = Math.floor((Date.now() - workCountdownStartTime) / 1000);
+      const remaining = Math.max(0, 120 - elapsed);
+      setWorkSecondsLeft(remaining);
+
+      if (remaining <= 0) {
         onComplete();
-        return 0;
-      });
-    }, 1000);
+        return;
+      }
+    };
+
+    // Update immediately
+    updateCountdown();
+
+    // Use shorter interval for more responsive updates, but rely on timestamp calculations
+    const timer = setInterval(updateCountdown, 100);
     return () => clearInterval(timer);
-  }, [showWorkCountdown, onComplete]);
+  }, [showWorkCountdown, workCountdownStartTime, onComplete]);
 
   const startExercise = () => {
     setIsActive(true);
@@ -115,6 +128,7 @@ export default function BreathingExercise({
     setShowWorkCountdown(false);
     setWorkSecondsLeft(120);
     setSessionStartTime(null);
+    setWorkCountdownStartTime(null);
     setShowDialog(true);
     setShowVisualizationButton(false);
   };
@@ -265,6 +279,7 @@ export default function BreathingExercise({
                     onClick={() => {
                       setShowVisualization(false);
                       setShowWorkCountdown(true);
+                      setWorkCountdownStartTime(Date.now());
                     }}
                     size="lg"
                   >
