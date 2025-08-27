@@ -765,6 +765,13 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
     startGame();
   };
 
+  const handleDemoFromDialog = () => {
+    setShowDialog(false);
+    setDemoMode(true);
+    setCountdown(3); // Set countdown immediately to prevent flash
+    startGame();
+  };
+
   const handleRestart = () => {
     console.log("=== RESTART CLICKED ===");
 
@@ -854,10 +861,10 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
         description={``}
         title={`Dual ${N}-Back Training`}
         instructions={
-          <div className="p-6 bg-gray-50 rounded-lg">
-            <p className="text-lg font-semibold text-black mb-4">Each turn shows a <span className="text-blue-600">square</span> + plays a <span className="text-orange-400">letter</span>. Compare them to exactly <span className="font-bold text-black bg-yellow-200 px-1 rounded">{N} turns ago</span>.</p>
-            <img src="/instructions/dualnback.png" alt="Dual N-Back Instructions" className="w-80 max-w-xs mx-auto mb-4 rounded-lg" />
-            <div className="space-y-3 text-base">
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <p className="text-base font-semibold text-black mb-3">Each turn shows a <span className="text-blue-600">square</span> + plays a <span className="text-orange-400">letter</span>. Compare them to exactly <span className="font-bold text-black bg-yellow-200 px-1 rounded">{N} turns ago</span>.</p>
+            <img src="/instructions/dualnback.png" alt="Dual N-Back Instructions" className="w-64 max-w-xs mx-auto mb-3 rounded-lg" />
+            <div className="space-y-2 text-sm">
               <p className="text-black">If the <span className="text-blue-600 font-semibold">square</span> matches <span className="font-bold text-black bg-yellow-200 px-1 rounded">{N} turns ago</span> → pick <span className="text-blue-600 font-semibold">Visual</span></p>
               <p className="text-black">If the <span className="text-orange-400 font-semibold">letter</span> matches <span className="font-bold text-black bg-yellow-200 px-1 rounded">{N} turns ago</span> → pick <span className="text-orange-400 font-semibold">Verbal</span></p>
               <p className="text-black">If neither → do nothing</p>
@@ -866,6 +873,24 @@ export default function DualNBack({ onComplete }: DualNBackProps) {
           </div>
         }
         onStart={handleStartFromDialog}
+        disableClickAnywhere={true}
+        additionalButtons={
+          <div className="flex gap-3">
+            <Button
+              onClick={handleDemoFromDialog}
+              variant="outline"
+              size="lg"
+            >
+              Show me a demo
+            </Button>
+            <Button
+              onClick={handleStartFromDialog}
+              size="lg"
+            >
+              Continue
+            </Button>
+          </div>
+        }
       />
 
       {/* Results/Completion Screen - handles both demo and real game */}
