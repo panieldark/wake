@@ -306,17 +306,21 @@ export default function BreathingExercise({
 
                 {userGoal && (
                   <div className="mb-4 p-4 bg-blue-50 rounded-lg max-w-lg mx-auto">
-                    <p className="text-sm text-blue-700 font-medium">Your commitment:</p>
+                    <p className="text-sm text-blue-700 font-medium">You committed to:</p>
                     <p className="text-base text-blue-900 mt-1">{userGoal}</p>
                   </div>
                 )}
                 <p className="text-md text-gray-500 px-8">
-                  Close your eyes and picture the steps to set up and get your
-                  task done, getting it done, and how it'll feel after you get
-                  it done.
+                  Close your eyes and picture your task.
                   <br />
                   <br />
-                  Open your eyes only when you have full confidence!
+                  What's needed to set up?
+                  <br />
+                  <br />
+                  How will it feel once it's done?
+                  <br />
+                  <br />
+                  Open your eyes only once you can see it in your head!
                 </p>
                 {showVisualizationButton && (
                   <Button
