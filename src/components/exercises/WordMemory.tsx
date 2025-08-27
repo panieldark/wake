@@ -1,8 +1,5 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { RotateCcw } from "lucide-react";
+import { motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface WordMemoryProps {
@@ -172,7 +172,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
   const [canContinue, setCanContinue] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [showingWords, setShowingWords] = useState(false);
-  const [revealCountdown, setRevealCountdown] = useState(10); // 10 seconds for reveal phase
+  const [revealCountdown, setRevealCountdown] = useState(15); // 15 seconds for reveal phase
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Handle initial countdown (3-2-1)
@@ -279,7 +279,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
   };
 
   const handleRecognitionComplete = () => {
-    setRevealCountdown(10); // Reset countdown for reveal phase
+    setRevealCountdown(15); // Reset countdown for reveal phase
     setPhase("reveal");
   };
 
@@ -353,7 +353,7 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
     setCanContinue(false);
     setCountdown(3);
     setShowingWords(false);
-    setRevealCountdown(10);
+    setRevealCountdown(15);
     setShowDialog(true);
   };
 
@@ -645,8 +645,8 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
                             <div className="text-2xl font-bold text-green-600">
                               {selectedWords.size > 0
                                 ? Array.from(selectedWords).filter((word) =>
-                                    wordList.includes(word),
-                                  ).length
+                                  wordList.includes(word),
+                                ).length
                                 : 0}
                             </div>
                             <div className="text-gray-600">Correct</div>
@@ -658,8 +658,8 @@ export default function WordMemory({ onComplete }: WordMemoryProps) {
                             <div className="text-2xl font-bold text-red-600">
                               {selectedWords.size > 0
                                 ? Array.from(selectedWords).filter(
-                                    (word) => !wordList.includes(word),
-                                  ).length
+                                  (word) => !wordList.includes(word),
+                                ).length
                                 : 0}
                             </div>
                             <div className="text-gray-600">Wrong</div>
