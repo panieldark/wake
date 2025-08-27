@@ -30,6 +30,7 @@ const exercises = [
 export default function WakeFlow({ onComplete }: WakeFlowProps) {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [wordMemoryWords, setWordMemoryWords] = useState<string[]>([]);
+  const [userGoal, setUserGoal] = useState<string>("");
 
   const handleNext = () => {
     if (currentExerciseIndex < exercises.length - 1) {
@@ -57,7 +58,7 @@ export default function WakeFlow({ onComplete }: WakeFlowProps) {
           <div className="flex items-center justify-between gap-8">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-gray-500">
-                Step{" "}
+                Part{" "}
                 {
                   exercises
                     .slice(0, currentExerciseIndex + 1)
@@ -97,6 +98,20 @@ export default function WakeFlow({ onComplete }: WakeFlowProps) {
             onComplete={handleNext}
             originalWords={wordMemoryWords}
           />
+        ) : exercises[currentExerciseIndex].name === "Goal Cueing" ? (
+          <CurrentExercise
+            onComplete={(goal?: string) => {
+              if (goal) setUserGoal(goal);
+              handleNext();
+            }}
+            onSkip={isSkippable ? handleSkip : undefined}
+          />
+        ) : exercises[currentExerciseIndex].name === "Breathing" ? (
+          <CurrentExercise
+            onComplete={handleNext}
+            onSkip={isSkippable ? handleSkip : undefined}
+            userGoal={userGoal}
+          />
         ) : (
           <CurrentExercise
             onComplete={handleNext}
@@ -118,11 +133,10 @@ export default function WakeFlow({ onComplete }: WakeFlowProps) {
                   type="button"
                   key={exercise.name}
                   onClick={() => jumpToExercise(index)}
-                  className={`text-xs px-2 py-1 rounded text-left hover:bg-gray-100 ${
-                    currentExerciseIndex === index
+                  className={`text-xs px-2 py-1 rounded text-left hover:bg-gray-100 ${currentExerciseIndex === index
                       ? "bg-blue-100 text-blue-800"
                       : "text-gray-600"
-                  }`}
+                    }`}
                 >
                   {index + 1}. {exercise.name}
                 </button>

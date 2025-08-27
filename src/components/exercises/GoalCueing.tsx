@@ -14,7 +14,7 @@ import { useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface GoalCueingProps {
-  onComplete: () => void;
+  onComplete: (goal?: string) => void;
 }
 
 export default function GoalCueing({ onComplete }: GoalCueingProps) {
@@ -39,7 +39,7 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
   const handleSubmit = () => {
     if (goal.trim().length > startingText.length + 5) {
       setSubmitted(true);
-      setTimeout(onComplete, 3000);
+      setTimeout(() => onComplete(goal), 3000);
     }
   };
 
@@ -131,7 +131,7 @@ export default function GoalCueing({ onComplete }: GoalCueingProps) {
               <div className="text-center py-8 space-y-6 animate-fade-in">
                 <div className="p-6 bg-gray-50 rounded-lg">
                   <p className="text-sm font-medium text-gray-600 mb-2">
-                    Your commitment:
+                    You committed to:
                   </p>
                   <p className="text-lg text-gray-900 italic">"{goal}"</p>
                 </div>

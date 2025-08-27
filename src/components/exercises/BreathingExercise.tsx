@@ -3,15 +3,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RotateCcw } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { ExerciseInstructionDialog } from "./ExerciseInstructionDialog";
 
 interface BreathingExerciseProps {
   onComplete: () => void;
+  userGoal?: string;
 }
 
 export default function BreathingExercise({
   onComplete,
+  userGoal,
 }: BreathingExerciseProps) {
   const [showDialog, setShowDialog] = useState(true);
   const [isActive, setIsActive] = useState(false);
@@ -25,9 +28,20 @@ export default function BreathingExercise({
   const [workCountdownStartTime, setWorkCountdownStartTime] = useState<number | null>(null);
   const [currentTime, setCurrentTimeNow] = useState(Date.now());
   const [showVisualizationButton, setShowVisualizationButton] = useState(false);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const [isInitialPause, setIsInitialPause] = useState(false);
+  const [pauseCountdown, setPauseCountdown] = useState(3);
 
   const TOTAL_SESSION_TIME = 64; // 4 cycles * 16 seconds
   const CYCLE_TIME = 16; // 4 seconds each phase
+
+  // Breathing tips to show intermittently
+  const breathingTips = [
+    "Try closing your eyes and following along",
+    "Relax your jaw muscles, try a slight smile",
+    "Let your shoulders drop and release any tension",
+    "Sit up a little straighter",
+  ];
 
   // Calculate current state from elapsed time
   const currentCycle = Math.floor(totalSecondsElapsed / CYCLE_TIME) + 1;
@@ -110,10 +124,38 @@ export default function BreathingExercise({
     return () => clearInterval(timer);
   }, [showWorkCountdown, workCountdownStartTime, onComplete]);
 
+  // Simple tip rotation with Framer Motion
+  useEffect(() => {
+    if (!isActive || isInitialPause) return;
+
+    // Show tips every 12 seconds, starting after 5 seconds
+    const tipInterval = setInterval(() => {
+      setCurrentTipIndex(prev => (prev + 1) % breathingTips.length);
+    }, 12000);
+
+    return () => clearInterval(tipInterval);
+  }, [isActive, isInitialPause, breathingTips.length]);
+
   const startExercise = () => {
     setIsActive(true);
     setTotalSecondsElapsed(0);
-    setSessionStartTime(Date.now());
+    setIsInitialPause(true);
+    setPauseCountdown(3);
+    // Set session start time 3 seconds in the future for the pause
+    setSessionStartTime(Date.now() + 3000);
+    setCurrentTipIndex(0);
+
+    // Countdown timer
+    let countdown = 3;
+    const countdownInterval = setInterval(() => {
+      countdown--;
+      setPauseCountdown(countdown);
+
+      if (countdown <= 0) {
+        clearInterval(countdownInterval);
+        setIsInitialPause(false);
+      }
+    }, 1000);
   };
 
   const handleStartFromDialog = () => {
@@ -131,6 +173,8 @@ export default function BreathingExercise({
     setWorkCountdownStartTime(null);
     setShowDialog(true);
     setShowVisualizationButton(false);
+    setCurrentTipIndex(0);
+    setIsInitialPause(false);
   };
 
   // Calculate smooth, continuous animation values using real-time, not discrete seconds
@@ -220,13 +264,33 @@ export default function BreathingExercise({
 
   return (
     <>
+      <style jsx global>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fade-out {
+          from { opacity: 1; transform: translateY(0); }
+          to { opacity: 0; transform: translateY(-8px); }
+        }
+        
+        .animate-tip-in {
+          animation: fade-in 0.5s ease-out forwards;
+        }
+        
+        .animate-tip-out {
+          animation: fade-out 0.5s ease-out forwards;
+        }
+      `}</style>
+
       <ExerciseInstructionDialog
         open={showDialog}
         onOpenChange={setShowDialog}
         title="Breathing Exercise"
         instructions={
           <div className="p-6 bg-gray-50 rounded-lg">
-            <p className="text-lg font-medium text-gray-700 text-center">Take some deep breaths to clear your head and get focused</p>
+            <p className="text-lg font-medium text-gray-700 text-center">Clear your head and get focused</p>
           </div>
         }
         onStart={handleStartFromDialog}
@@ -238,14 +302,21 @@ export default function BreathingExercise({
             <CardContent className="text-center py-16">
               <div className="space-y-6">
                 <h3 className="text-3xl pt-6 font-light">Picture your task</h3>
+
+
+                {userGoal && (
+                  <div className="mb-4 p-4 bg-blue-50 rounded-lg max-w-lg mx-auto">
+                    <p className="text-sm text-blue-700 font-medium">Your commitment:</p>
+                    <p className="text-base text-blue-900 mt-1">{userGoal}</p>
+                  </div>
+                )}
                 <p className="text-md text-gray-500 px-8">
                   Close your eyes and picture the steps to set up and get your
                   task done, getting it done, and how it'll feel after you get
                   it done.
                   <br />
                   <br />
-                  Open your eyes only when you can see it and know you'll get it
-                  done.
+                  Open your eyes only when you have full confidence!
                 </p>
                 {showVisualizationButton && (
                   <Button
@@ -313,13 +384,13 @@ export default function BreathingExercise({
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <p className="text-4xl font-light mb-2 text-gray-700">
-                    {phaseNames[currentPhase]}
+                    {isInitialPause ? "Get ready..." : phaseNames[currentPhase]}
                   </p>
                   <div
                     className="text-6xl font-bold tabular-nums mb-2"
-                    style={{ color: phaseColors[currentPhase] }}
+                    style={{ color: isInitialPause ? "#6B7280" : phaseColors[currentPhase] }}
                   >
-                    {secondsLeft}
+                    {isInitialPause ? pauseCountdown : secondsLeft}
                   </div>
                   <p className="text-sm text-gray-500">
                     Cycle {Math.min(currentCycle, 4)} / 4
@@ -327,6 +398,24 @@ export default function BreathingExercise({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Breathing tips - fixed height to prevent layout shift */}
+          <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 w-96 h-8">
+            <AnimatePresence mode="wait">
+              {isActive && !isInitialPause && totalSecondsElapsed >= 5 && (
+                <motion.p
+                  key={currentTipIndex}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="text-center text-gray-600 text-sm"
+                >
+                  Tip: {breathingTips[currentTipIndex]}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Overall session progress bar */}
