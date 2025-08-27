@@ -41,24 +41,27 @@ export default function MentalArithmetic({
 
     switch (operation) {
       case "+": {
-        const addRange = Math.floor(25 * difficultyMultiplier) + 5; // 6-55 range
-        a = Math.floor(Math.random() * addRange) + 5;
-        b = Math.floor(Math.random() * addRange) + 5;
+        // Ensure result is at least 10: minimum values increased
+        const addRange = Math.floor(30 * difficultyMultiplier) + 10; // 10-64 range
+        a = Math.floor(Math.random() * addRange) + 8;
+        b = Math.floor(Math.random() * addRange) + 8;
         answer = a + b;
         break;
       }
       case "-": {
-        const subRangeA = Math.floor(40 * difficultyMultiplier) + 20; // 20-100 range
-        const subRangeB = Math.floor(20 * difficultyMultiplier) + 5; // 5-45 range
-        a = Math.floor(Math.random() * subRangeA) + 20;
-        b = Math.floor(Math.random() * Math.min(subRangeB, a - 1)) + 1; // Ensure positive result
+        // Already produces double-digit results, but increase minimum slightly
+        const subRangeA = Math.floor(40 * difficultyMultiplier) + 30; // 30-102 range
+        const subRangeB = Math.floor(20 * difficultyMultiplier) + 5; // 5-41 range
+        a = Math.floor(Math.random() * subRangeA) + 25;
+        b = Math.floor(Math.random() * Math.min(subRangeB, a - 15)) + 1; // Ensure result >= 10
         answer = a - b;
         break;
       }
       case "*": {
-        const mulRange = Math.floor(8 * difficultyMultiplier) + 2; // 2-18 range
-        a = Math.floor(Math.random() * mulRange) + 2;
-        b = Math.floor(Math.random() * mulRange) + 2;
+        // Ensure result is at least 10: use larger minimum values
+        const mulRange = Math.floor(10 * difficultyMultiplier) + 3; // 3-21 range
+        a = Math.floor(Math.random() * mulRange) + 4;
+        b = Math.floor(Math.random() * mulRange) + 3;
         answer = a * b;
         break;
       }
@@ -118,6 +121,8 @@ export default function MentalArithmetic({
   const handleStartFromDialog = () => {
     setShowDialog(false);
     setIsActive(true);
+    // Focus input after a short delay to ensure DOM is ready
+    setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   const handleRestart = () => {

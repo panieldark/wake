@@ -33,7 +33,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
   const [grid2, setGrid2] = useState<Grid>([]);
   const [gameStarted, setGameStarted] = useState(false);
   const [currentRound, setCurrentRound] = useState(1);
-  const [level, setLevel] = useState(3);
+  const [level, setLevel] = useState(4);
   const [score, setScore] = useState(0);
   const [showDialog, setShowDialog] = useState(true);
   const maxLevel = 20; // Increased max level for more tokens
@@ -113,9 +113,9 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
     if (!gameStarted) return;
 
     // Check if grids actually match (using JSON comparison like the Svelte version)
-    const actualMatch = JSON.stringify(grid1) !== JSON.stringify(grid2);
+    const gridsAreDifferent = JSON.stringify(grid1) !== JSON.stringify(grid2);
 
-    if ((isMatch && !actualMatch) || (!isMatch && actualMatch)) {
+    if ((isMatch && !gridsAreDifferent) || (!isMatch && gridsAreDifferent)) {
       // Was correct
       playSuccessSound();
       setScore(score + 1);
@@ -123,8 +123,8 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
       if (currentRound < totalRounds) {
         const nextRound = currentRound + 1;
         setCurrentRound(nextRound);
-        // Level increases with each successful round: 3, 4, 5, etc.
-        setLevel(Math.min(2 + nextRound, maxLevel)); // Round 1 = level 3, Round 2 = level 4, etc.
+        // Level increases with each successful round: 4, 5, 6, etc.
+        setLevel(Math.min(3 + nextRound, maxLevel)); // Round 1 = level 4, Round 2 = level 5, etc.
       } else {
         // All rounds completed!
         setGameStarted(false);
@@ -146,7 +146,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
   const startGame = useCallback(() => {
     setGameStarted(true);
     setCurrentRound(1);
-    setLevel(3);
+    setLevel(4);
     setScore(0);
     newRound();
   }, [newRound]);
@@ -275,7 +275,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
     // Ensure game starts fresh
     setGameStarted(true);
     setCurrentRound(1);
-    setLevel(3);
+    setLevel(4);
     setScore(0);
     newRound();
   };
@@ -285,7 +285,7 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
     setGrid2([]);
     setGameStarted(false);
     setCurrentRound(1);
-    setLevel(3);
+    setLevel(4);
     setScore(0);
     setShowDialog(true);
   };
