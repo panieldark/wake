@@ -297,16 +297,16 @@ export default function VisualSearch({ onComplete }: VisualSearchProps) {
         onOpenChange={setShowDialog}
         title="Feature Match"
         instructions={
-          <div className="p-6 bg-gray-50 rounded-lg">
-            <p className="text-lg text-neutral-700 font-medium text-center mb-6">Compare the shapes between the two grids. At most, one shape may not match. Identify correctly.</p>
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <p className="text-lg text-neutral-700 font-medium text-center mb-4">Compare the shapes between the two grids. At most, one shape may not match. Identify correctly.</p>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-3">
               <div className="text-center">
-                <img src="/instructions/match.png" alt="Match example" className="w-full max-w-xs mx-auto mb-2 rounded-lg" />
+                <img src="/instructions/match.png" alt="Match example" className="w-full max-w-sm mx-auto rounded-sm" />
               </div>
 
               <div className="text-center">
-                <img src="/instructions/mismatch.png" alt="Mismatch example" className="w-full max-w-xs mx-auto mb-2 rounded-lg" />
+                <img src="/instructions/mismatch.png" alt="Mismatch example" className="w-full max-w-sm mx-auto rounded-sm" />
               </div>
             </div>
           </div>
