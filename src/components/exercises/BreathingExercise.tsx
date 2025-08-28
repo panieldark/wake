@@ -37,10 +37,10 @@ export default function BreathingExercise({
 
   // Breathing tips to show intermittently
   const breathingTips = [
-    "Try closing your eyes and following along",
     "Relax your jaw muscles, try a slight smile",
     "Let your shoulders drop and release any tension",
     "Sit up a little straighter",
+    "Try closing your eyes and following along",
   ];
 
   // Calculate current state from elapsed time

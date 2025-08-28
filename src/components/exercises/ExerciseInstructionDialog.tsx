@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 interface ExerciseInstructionDialogProps {
   open: boolean;
@@ -29,6 +29,21 @@ export function ExerciseInstructionDialog({
     onOpenChange(false);
     onStart();
   };
+
+  // Handle keyboard events for Enter and Spacebar
+  useEffect(() => {
+    if (!open || disableClickAnywhere) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, disableClickAnywhere, handleClose]);
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
